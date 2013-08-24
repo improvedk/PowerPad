@@ -2,13 +2,11 @@
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Threading;
 using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 
-namespace PowerController
+namespace PowerPad
 {
 	class Program
 	{
@@ -17,7 +15,6 @@ namespace PowerController
 		private static readonly Stopwatch watch = new Stopwatch();
 		private static readonly string cacheDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Cache");
 		private static int portNumber = Convert.ToInt32(ConfigurationManager.AppSettings["Port"]);
-		private static HttpListener httpListener = new HttpListener();
 
 		static void Main()
 		{
@@ -26,7 +23,7 @@ namespace PowerController
 				Directory.Delete(cacheDirectory, true);
 			Directory.CreateDirectory(cacheDirectory);
 
-			// Wire up events
+			// Wire up PowerPoint events
 			ppt.PresentationOpen += ppt_PresentationOpen;
 			ppt.PresentationClose += ppt_PresentationClose;
 			ppt.SlideShowBegin += ppt_SlideShowBegin;
@@ -60,36 +57,14 @@ namespace PowerController
 				ppt.Activate();
 			}
 
-			// Start HTTP server
-			httpListener.Prefixes.Add("http://+:" + portNumber + "/");
-			httpListener.Start();
-
-			var listenerThread = new Thread(handleRequests);
-			listenerThread.Start();
-
-			// Wait for the user to close by pressing <Enter>
-			while (Console.ReadLine() != "quit") { }
-		}
-
-		static void handleRequests()
-		{
-			while (httpListener.IsListening)
+			// Start server
+			using (var server = new PadServer(portNumber))
 			{
-				var context = httpListener.BeginGetContext(handleRequest, httpListener);
-				context.AsyncWaitHandle.WaitOne();
-			}
-		}
-		
-		static void handleRequest(IAsyncResult ar)
-		{
-			var listener = ar.AsyncState as HttpListener;
-			var context = listener.EndGetContext(ar);
+				server.Start();
 
-			context.Response.StatusCode = 200;
-			
-			using (var sw = new StreamWriter(context.Response.OutputStream))
-			{
-				sw.WriteLine("Hello world!");
+				// Wait for the user to close by typing "quit<Enter>"
+				while (Console.ReadLine() != "quit")
+				{ }
 			}
 		}
 		
