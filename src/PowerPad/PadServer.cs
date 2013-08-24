@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using PowerPad.RouteHandlers;
 
@@ -13,6 +15,7 @@ namespace PowerPad
 		private HttpListener listener;
 		private readonly Dictionary<string, IRouteHandler> routeHandlers = new Dictionary<string, IRouteHandler>();
 		private readonly Dictionary<int, IRouteHandler> errorHandlers = new Dictionary<int, IRouteHandler>();
+		private static readonly string frontendDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Frontend");
 
 		internal PadServer(int portNumber)
 		{
@@ -25,7 +28,8 @@ namespace PowerPad
 				throw new InvalidOperationException("Can't start already started PadServer");
 
 			// Setup routes
-			routeHandlers.Add("/", new RootHandler());
+			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(frontendDirectory, "index.htm")));
+			routeHandlers.Add("/jquery-2.0.3.min.js/", new StaticFileHandler(Path.Combine(frontendDirectory, "jquery-2.0.3.min.js")));
 			routeHandlers.Add("/images/nextslide/", new NextSlideImageHandler());
 
 			// Setup error handlers
