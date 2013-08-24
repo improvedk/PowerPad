@@ -42,6 +42,7 @@ namespace PowerPad
 			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "index.htm")));
 			routeHandlers.Add("/jquery-2.0.3.min.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "jquery-2.0.3.min.js")));
 			routeHandlers.Add("/slideimage/", new SlideImageHandler());
+			routeHandlers.Add("/slideshowdata/", new SlideShowDataHandler());
 
 			// Setup error handlers
 			errorHandlers.Add(404, new ErrorHandler(404));

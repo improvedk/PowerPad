@@ -9,9 +9,10 @@ namespace PowerPad
 	class Program
 	{
 		private static readonly Application ppt = new Application();
-		private static SlideShowWindow activeSlideShow;
 		private static readonly Stopwatch watch = new Stopwatch();
 		
+		public static SlideShowWindow ActiveSlideShow;
+
 		static void Main()
 		{
 			// Clear cache
@@ -53,7 +54,10 @@ namespace PowerPad
 					if (ppt.SlideShowWindows.Count > 0)
 					{
 						ppt_SlideShowBegin(ppt.SlideShowWindows[1]);
-						ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
+
+						// Has slide show been closed while we were starting it up?
+						if (ActiveSlideShow != null)
+							ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
 					}
 				}
 				else
@@ -73,7 +77,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_SlideShowNextSlide(SlideShowWindow win)
 		{
-			if (activeSlideShow != null && win.HWND != activeSlideShow.HWND)
+			if (ActiveSlideShow != null && win.HWND != ActiveSlideShow.HWND)
 				return;
 			
 			writeLine("Current slide: " + win.View.CurrentShowPosition);
@@ -84,7 +88,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_SlideShowEnd(Presentation pres)
 		{
-			activeSlideShow = null;
+			ActiveSlideShow = null;
 			writeLine("Ending slide show");
 		}
 
@@ -93,7 +97,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_SlideShowBegin(SlideShowWindow win)
 		{
-			if (activeSlideShow != null)
+			if (ActiveSlideShow != null)
 			{
 				writeWarning("Ignoring new slide show as another is already active");
 				return;
@@ -102,7 +106,7 @@ namespace PowerPad
 			writeLine("Beginning slide show");
 
 			// Start the timer
-			activeSlideShow = win;
+			ActiveSlideShow = win;
 			watch.Reset();
 			watch.Start();
 			
@@ -120,6 +124,13 @@ namespace PowerPad
 			int previousProgress = 0;
 			for (int i = 1; i <= totalSlides; i++)
 			{
+				// If the user closes the slide show while we're caching, abort
+				if (ActiveSlideShow == null)
+				{
+					writeLine("Aborting cache since slide show has ended");
+					return;
+				}
+
 				// Only export if slide hasn't already been cached
 				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".jpg")))
 				{
