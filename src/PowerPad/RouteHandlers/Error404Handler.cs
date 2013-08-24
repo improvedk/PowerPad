@@ -5,12 +5,10 @@ namespace PowerPad.RouteHandlers
 {
 	internal class Error404Handler : IRouteHandler
 	{
-		public void HandleRequest(HttpListenerContext context)
+		public void HandleRequest(HttpListenerContext context, StreamWriter sw)
 		{
 			context.Response.StatusCode = 404;
-			
-			using (var sw = new StreamWriter(context.Response.OutputStream))
-				sw.WriteLine("404");
+			sw.WriteLine("404");
 		}
 	}
 }

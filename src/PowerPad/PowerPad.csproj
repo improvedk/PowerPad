@@ -60,7 +60,7 @@
     <Compile Include="RouteHandlers\StaticFileHandler.cs" />
     <Compile Include="RouteHandlers\Error404Handler.cs" />
     <Compile Include="RouteHandlers\IRouteHandler.cs" />
-    <Compile Include="RouteHandlers\NextSlideImageHandler.cs" />
+    <Compile Include="RouteHandlers\SlideImageHandler.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>

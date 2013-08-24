@@ -7,8 +7,8 @@ namespace PowerPad.RouteHandlers
 {
 	internal class StaticFileHandler : IRouteHandler
 	{
-		private byte[] source;
-		private string contentType;
+		private readonly byte[] source;
+		private readonly string contentType;
 
 		private Dictionary<string, string> knownContentTypes = new Dictionary<string, string> {
 			{ ".js", "application/javascript" },
@@ -29,7 +29,7 @@ namespace PowerPad.RouteHandlers
 				contentType = knownContentTypes[extension];
 		}
 
-		public void HandleRequest(HttpListenerContext context)
+		public void HandleRequest(HttpListenerContext context, StreamWriter sw)
 		{
 			if (contentType != null)
 				context.Response.ContentType = contentType;

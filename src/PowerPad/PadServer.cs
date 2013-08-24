@@ -41,7 +41,7 @@ namespace PowerPad
 			// Setup routes
 			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "index.htm")));
 			routeHandlers.Add("/jquery-2.0.3.min.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "jquery-2.0.3.min.js")));
-			routeHandlers.Add("/images/nextslide/", new NextSlideImageHandler());
+			routeHandlers.Add("/slideimage/", new SlideImageHandler());
 
 			// Setup error handlers
 			errorHandlers.Add(404, new Error404Handler());
@@ -82,15 +82,18 @@ namespace PowerPad
 				path += "/";
 
 			// Locate route/error handler, if none found, return 404
-			if (routeHandlers.ContainsKey(path))
+			using (var sw = new StreamWriter(context.Response.OutputStream))
 			{
-				context.Response.StatusCode = 200;
-				routeHandlers[path].HandleRequest(context);
-			}
-			else
-			{
-				context.Response.StatusCode = 404;
-				errorHandlers[404].HandleRequest(context);
+				if (routeHandlers.ContainsKey(path))
+				{
+					context.Response.StatusCode = 200;
+					routeHandlers[path].HandleRequest(context, sw);
+				}
+				else
+				{
+					context.Response.StatusCode = 404;
+					errorHandlers[404].HandleRequest(context, sw);
+				}
 			}
 
 			context.Response.Close();
