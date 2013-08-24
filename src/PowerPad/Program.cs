@@ -33,15 +33,15 @@ namespace PowerPad
 			// Either hook into running instance or start a new instance of PowerPoint up
 			if (ppt.Visible == MsoTriState.msoTrue)
 			{
-				write("Connected to running PowerPoint instance");
+				writeLine("Connected to running PowerPoint instance");
 
 				// If there are any opened presentations, notify the user
 				if (ppt.Presentations.Count == 0)
-					write("\tNo open presentations");
+					writeLine("\tNo open presentations");
 				else
 				{
 					foreach (Presentation preso in ppt.Presentations)
-						write("\t" + preso.Name + " (" + preso.Slides.Count + " slides)");
+						writeLine("\t" + preso.Name + " (" + preso.Slides.Count + " slides)");
 				}
 
 				// Do we need to connect to a running slide show?
@@ -53,7 +53,7 @@ namespace PowerPad
 			}
 			else
 			{
-				write("Starting up new PowerPoint instance");
+				writeLine("Starting up new PowerPoint instance");
 				ppt.Activate();
 			}
 
@@ -71,25 +71,27 @@ namespace PowerPad
 		/// <summary>
 		/// Fires when user changes slide during an active slideshow
 		/// </summary>
-		/// <param name="Wn"></param>
-		static void ppt_SlideShowNextSlide(SlideShowWindow Wn)
+		static void ppt_SlideShowNextSlide(SlideShowWindow win)
 		{
-			write("Current slide: " + Wn.View.CurrentShowPosition);
+			if (win.HWND != activeSlideShow.HWND)
+				return;
+			
+			writeLine("Current slide: " + win.View.CurrentShowPosition);
 		}
 
 		/// <summary>
 		/// Fires when a slideshow ends
 		/// </summary>
-		static void ppt_SlideShowEnd(Presentation Pres)
+		static void ppt_SlideShowEnd(Presentation pres)
 		{
 			activeSlideShow = null;
-			write("Ending slide show");
+			writeLine("Ending slide show");
 		}
 
 		/// <summary>
 		/// Fires when a slideshow begins
 		/// </summary>
-		static void ppt_SlideShowBegin(SlideShowWindow Wn)
+		static void ppt_SlideShowBegin(SlideShowWindow win)
 		{
 			if (activeSlideShow != null)
 			{
@@ -97,23 +99,25 @@ namespace PowerPad
 				return;
 			}
 
-			write("Beginning slide show");
+			writeLine("Beginning slide show");
 
 			// Start the timer
-			activeSlideShow = Wn;
+			activeSlideShow = win;
 			watch.Reset();
 			watch.Start();
 			
 			// Save all slides as JPGs
-			cacheSlides(Wn.Presentation);
+			cacheSlides(win.Presentation);
 		}
 
 		static void cacheSlides(Presentation preso)
 		{
-			Console.Write(DateTime.Now.ToString("hh:mm:ss") + ":\tCaching slides:   0%");
+			writeLine("Caching slides...");
+			writeLine("0%");
 
 			// Loop slides, cache & report progress
 			int totalSlides = preso.Slides.Count;
+			int previousProgress = 0;
 			for (int i = 1; i <= totalSlides; i++)
 			{
 				// Only export if slide hasn't already been cached
@@ -126,15 +130,12 @@ namespace PowerPad
 
 				// Report progress
 				int percentage = (int)Math.Round((double)i / totalSlides * 100, 0);
-				Console.SetCursorPosition(Console.CursorLeft - 4, Console.CursorTop);
-				Console.Write(percentage.ToString().PadLeft(3, ' ') + "%");
+				if (percentage - previousProgress > 10 || percentage == 100)
+				{
+					writeLine(percentage + "%");
+					previousProgress = percentage;
+				}
 			}
-
-			// Make sure we end at 100% progress no matter what
-			Console.SetCursorPosition(Console.CursorLeft - 4, Console.CursorTop);
-			Console.Write("100%");
-
-			Console.WriteLine();
 		}
 
 		/// <summary>
@@ -142,7 +143,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_PresentationClose(Presentation pres)
 		{
-			write("Presentation closed");
+			writeLine("Presentation closed");
 		}
 
 		/// <summary>
@@ -150,10 +151,10 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_PresentationOpen(Presentation pres)
 		{
-			write("Presentation opened: " + pres.Name + " (" + pres.Slides.Count + " slides)");
+			writeLine("Presentation opened: " + pres.Name + " (" + pres.Slides.Count + " slides)");
 		}
 
-		static void write(object msg)
+		static void writeLine(object msg)
 		{
 			Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + ":\t" + msg);
 		}
@@ -164,7 +165,7 @@ namespace PowerPad
 		static void writeWarning(object msg)
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
-			write(msg);
+			writeLine(msg);
 			Console.ResetColor();
 		}
 	}
