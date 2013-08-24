@@ -73,7 +73,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_SlideShowNextSlide(SlideShowWindow win)
 		{
-			if (win.HWND != activeSlideShow.HWND)
+			if (activeSlideShow != null && win.HWND != activeSlideShow.HWND)
 				return;
 			
 			writeLine("Current slide: " + win.View.CurrentShowPosition);
@@ -121,12 +121,12 @@ namespace PowerPad
 			for (int i = 1; i <= totalSlides; i++)
 			{
 				// Only export if slide hasn't already been cached
-				if (File.Exists(Path.Combine(cacheDirectory, i + ".jpg")))
-					continue;
-
-				// Export slide
-				Slide slide = preso.Slides[i];
-				slide.Export(Path.Combine(cacheDirectory, i + ".jpg"), "jpg");
+				if (!File.Exists(Path.Combine(cacheDirectory, i + ".jpg")))
+				{
+					// Export slide
+					Slide slide = preso.Slides[i];
+					slide.Export(Path.Combine(cacheDirectory, i + ".jpg"), "jpg");
+				}
 
 				// Report progress
 				int percentage = (int)Math.Round((double)i / totalSlides * 100, 0);
