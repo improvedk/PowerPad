@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading;
 using PowerPad.RouteHandlers;
 
@@ -18,6 +20,17 @@ namespace PowerPad
 		internal PadServer(int portNumber)
 		{
 			this.portNumber = portNumber;
+		}
+
+		internal IEnumerable<string> ListeningAddresses
+		{
+			get
+			{
+				foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+					foreach (var ua in ni.GetIPProperties().UnicastAddresses)
+						if (ua.Address.AddressFamily == AddressFamily.InterNetwork)
+							yield return "http://" + ua.Address + ":" + portNumber + "/";
+			}
 		}
 
 		internal void Start()

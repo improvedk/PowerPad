@@ -19,43 +19,48 @@ namespace PowerPad
 				Directory.Delete(Settings.CacheDirectory, true);
 			Directory.CreateDirectory(Settings.CacheDirectory);
 
-			// Wire up PowerPoint events
-			ppt.PresentationOpen += ppt_PresentationOpen;
-			ppt.SlideShowBegin += ppt_SlideShowBegin;
-			ppt.SlideShowEnd += ppt_SlideShowEnd;
-			ppt.SlideShowNextSlide += ppt_SlideShowNextSlide;
-
-			// Either hook into running instance or start a new instance of PowerPoint up
-			if (ppt.Visible == MsoTriState.msoTrue)
-			{
-				writeLine("Connected to running PowerPoint instance");
-
-				// If there are any opened presentations, notify the user
-				if (ppt.Presentations.Count == 0)
-					writeLine("\tNo open presentations");
-				else
-				{
-					foreach (Presentation preso in ppt.Presentations)
-						writeLine("\t" + preso.Name + " (" + preso.Slides.Count + " slides)");
-				}
-
-				// Do we need to connect to a running slide show?
-				if (ppt.SlideShowWindows.Count > 0)
-				{
-					ppt_SlideShowBegin(ppt.SlideShowWindows[1]);
-					ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
-				}
-			}
-			else
-			{
-				writeLine("Starting up new PowerPoint instance");
-				ppt.Activate();
-			}
-
 			// Start server
 			using (var server = new PadServer(Settings.PortNumber))
 			{
 				server.Start();
+
+				// Report which addresses server is listening on
+				writeLine("Server now listening on:");
+				foreach (var addr in server.ListeningAddresses)
+					writeLine("\t" + addr);
+			
+				// Wire up PowerPoint events
+				ppt.PresentationOpen += ppt_PresentationOpen;
+				ppt.SlideShowBegin += ppt_SlideShowBegin;
+				ppt.SlideShowEnd += ppt_SlideShowEnd;
+				ppt.SlideShowNextSlide += ppt_SlideShowNextSlide;
+
+				// Either hook into running instance or start a new instance of PowerPoint up
+				if (ppt.Visible == MsoTriState.msoTrue)
+				{
+					writeLine("Connected to running PowerPoint instance");
+
+					// If there are any opened presentations, notify the user
+					if (ppt.Presentations.Count == 0)
+						writeLine("\tNo open presentations");
+					else
+					{
+						foreach (Presentation preso in ppt.Presentations)
+							writeLine("\t" + preso.Name + " (" + preso.Slides.Count + " slides)");
+					}
+
+					// Do we need to connect to a running slide show?
+					if (ppt.SlideShowWindows.Count > 0)
+					{
+						ppt_SlideShowBegin(ppt.SlideShowWindows[1]);
+						ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
+					}
+				}
+				else
+				{
+					writeLine("Starting up new PowerPoint instance");
+					ppt.Activate();
+				}
 
 				// Wait for the user to close by typing "quit<Enter>"
 				while (Console.ReadLine() != "quit")
