@@ -14,7 +14,6 @@ namespace PowerPad
 		private static SlideShowWindow activeSlideShow;
 		private static readonly Stopwatch watch = new Stopwatch();
 		private static readonly string cacheDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Cache");
-		private static int portNumber = Convert.ToInt32(ConfigurationManager.AppSettings["Port"]);
 
 		static void Main()
 		{
@@ -25,7 +24,6 @@ namespace PowerPad
 
 			// Wire up PowerPoint events
 			ppt.PresentationOpen += ppt_PresentationOpen;
-			ppt.PresentationClose += ppt_PresentationClose;
 			ppt.SlideShowBegin += ppt_SlideShowBegin;
 			ppt.SlideShowEnd += ppt_SlideShowEnd;
 			ppt.SlideShowNextSlide += ppt_SlideShowNextSlide;
@@ -58,6 +56,7 @@ namespace PowerPad
 			}
 
 			// Start server
+			int portNumber = Convert.ToInt32(ConfigurationManager.AppSettings["Port"]);
 			using (var server = new PadServer(portNumber))
 			{
 				server.Start();
@@ -136,14 +135,6 @@ namespace PowerPad
 					previousProgress = percentage;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Fires when user closes a presentation
-		/// </summary>
-		static void ppt_PresentationClose(Presentation pres)
-		{
-			writeLine("Presentation closed");
 		}
 
 		/// <summary>

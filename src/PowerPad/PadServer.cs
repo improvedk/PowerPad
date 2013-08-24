@@ -1,7 +1,8 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using PowerPad.RouteHandlers;
 
 namespace PowerPad
 {
@@ -10,6 +11,8 @@ namespace PowerPad
 		private readonly int portNumber;
 		private Thread listenerThread;
 		private HttpListener listener;
+		private readonly Dictionary<string, IRouteHandler> routeHandlers = new Dictionary<string, IRouteHandler>();
+		private readonly Dictionary<int, IRouteHandler> errorHandlers = new Dictionary<int, IRouteHandler>();
 
 		internal PadServer(int portNumber)
 		{
@@ -21,6 +24,14 @@ namespace PowerPad
 			if (listenerThread != null)
 				throw new InvalidOperationException("Can't start already started PadServer");
 
+			// Setup routes
+			routeHandlers.Add("/", new RootHandler());
+			routeHandlers.Add("/images/nextslide/", new NextSlideImageHandler());
+
+			// Setup error handlers
+			errorHandlers.Add(404, new Error404Handler());
+
+			// Setup listener and start listening
 			listener = new HttpListener();
 			listener.Prefixes.Add("http://+:" + portNumber + "/");
 
@@ -30,6 +41,9 @@ namespace PowerPad
 			listener.Start();
 		}
 
+		/// <summary>
+		/// Continually listens for incoming requests and calls the request handler
+		/// </summary>
 		private void listenForRequests()
 		{
 			while (listener.IsListening)
@@ -39,21 +53,37 @@ namespace PowerPad
 			}
 		}
 
-		static void handleRequest(IAsyncResult ar)
+		/// <summary>
+		/// Handles requests
+		/// </summary>
+		private void handleRequest(IAsyncResult ar)
 		{
 			var listener = ar.AsyncState as HttpListener;
 			var context = listener.EndGetContext(ar);
 
-			context.Response.StatusCode = 200;
+			// Make sure path always ends with a /
+			string path = context.Request.Url.LocalPath;
+			if (!path.EndsWith("/"))
+				path += "/";
 
-			using (var sw = new StreamWriter(context.Response.OutputStream))
+			// Locate route/error handler, if none found, return 404
+			if (routeHandlers.ContainsKey(path))
 			{
-				sw.WriteLine("Hello world!");
+				context.Response.StatusCode = 200;
+				routeHandlers[path].HandleRequest(context);
 			}
+			else
+			{
+				context.Response.StatusCode = 404;
+				errorHandlers[404].HandleRequest(context);
+			}
+
+			context.Response.Close();
 		}
 
 		internal void Stop()
 		{
+			// First stop the listener, then abort the request handler thread
 			listener.Stop();
 			listenerThread.Abort();
 		}

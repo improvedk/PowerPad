@@ -57,6 +57,10 @@
     <Compile Include="PadServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RouteHandlers\Error404Handler.cs" />
+    <Compile Include="RouteHandlers\IRouteHandler.cs" />
+    <Compile Include="RouteHandlers\NextSlideImageHandler.cs" />
+    <Compile Include="RouteHandlers\RootHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
