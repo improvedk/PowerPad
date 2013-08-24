@@ -61,6 +61,7 @@
     <Compile Include="RouteHandlers\Error404Handler.cs" />
     <Compile Include="RouteHandlers\IRouteHandler.cs" />
     <Compile Include="RouteHandlers\NextSlideImageHandler.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

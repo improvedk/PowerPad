@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 
@@ -13,14 +11,13 @@ namespace PowerPad
 		private static readonly Application ppt = new Application();
 		private static SlideShowWindow activeSlideShow;
 		private static readonly Stopwatch watch = new Stopwatch();
-		private static readonly string cacheDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Cache");
-
+		
 		static void Main()
 		{
 			// Clear cache
-			if (Directory.Exists(cacheDirectory))
-				Directory.Delete(cacheDirectory, true);
-			Directory.CreateDirectory(cacheDirectory);
+			if (Directory.Exists(Settings.CacheDirectory))
+				Directory.Delete(Settings.CacheDirectory, true);
+			Directory.CreateDirectory(Settings.CacheDirectory);
 
 			// Wire up PowerPoint events
 			ppt.PresentationOpen += ppt_PresentationOpen;
@@ -56,8 +53,7 @@ namespace PowerPad
 			}
 
 			// Start server
-			int portNumber = Convert.ToInt32(ConfigurationManager.AppSettings["Port"]);
-			using (var server = new PadServer(portNumber))
+			using (var server = new PadServer(Settings.PortNumber))
 			{
 				server.Start();
 
@@ -120,11 +116,11 @@ namespace PowerPad
 			for (int i = 1; i <= totalSlides; i++)
 			{
 				// Only export if slide hasn't already been cached
-				if (!File.Exists(Path.Combine(cacheDirectory, i + ".jpg")))
+				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".jpg")))
 				{
 					// Export slide
 					Slide slide = preso.Slides[i];
-					slide.Export(Path.Combine(cacheDirectory, i + ".jpg"), "jpg");
+					slide.Export(Path.Combine(Settings.CacheDirectory, i + ".jpg"), "jpg");
 				}
 
 				// Report progress
