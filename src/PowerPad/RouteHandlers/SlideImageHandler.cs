@@ -11,8 +11,7 @@ namespace PowerPad.RouteHandlers
 			// Validate parameters
 			if (context.Request.QueryString["Number"] == null)
 			{
-				context.Response.StatusCode = 500;
-				sw.WriteLine("Missing parameter 'Number'");
+				new ErrorHandler(500, "Missing parameter: 'Number'").HandleRequest(context, sw);
 				return;
 			}
 
@@ -24,8 +23,7 @@ namespace PowerPad.RouteHandlers
 			}
 			catch (FormatException)
 			{
-				context.Response.StatusCode = 500;
-				sw.WriteLine("Invalid parameter value: 'Number'");
+				new ErrorHandler(500, "Invalid parameter value: 'Number'").HandleRequest(context, sw);
 				return;
 			}
 
@@ -33,8 +31,7 @@ namespace PowerPad.RouteHandlers
 			string slideCachePath = Path.Combine(Settings.CacheDirectory, slideNumber + ".jpg");
 			if (!File.Exists(slideCachePath))
 			{
-				context.Response.StatusCode = 404;
-				sw.WriteLine("Slide does not exist");
+				new ErrorHandler(404, "Slide does not exist").HandleRequest(context, sw);
 				return;
 			}
 

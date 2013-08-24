@@ -44,7 +44,7 @@ namespace PowerPad
 			routeHandlers.Add("/slideimage/", new SlideImageHandler());
 
 			// Setup error handlers
-			errorHandlers.Add(404, new Error404Handler());
+			errorHandlers.Add(404, new ErrorHandler(404));
 
 			// Setup listener and start listening
 			listener = new HttpListener();
