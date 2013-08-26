@@ -3,13 +3,26 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=1024, height=768, maximum-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<title>PowerPad</title>
 		<style>
 			* {
 				padding: 0;
 				margin: 0;
 				font-family: Verdana;
+			}
+
+			html, body {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+
+			#nextSlideImg {
+				/* This stretches the image to fit, but we'll accept it for simplicity */
+				width: 100%;
+				height: 100%;
 			}
 		</style>
 		<script src="jquery-2.0.3.min.js"></script>
@@ -18,9 +31,9 @@
 			$(function() {
 				setInterval(function() {
 					$.ajax({
-						url: "/slideshowdata/"
+						url: '/slideshowdata/'
 					}).done(function (data) {
-						$("#currentSlideImg").attr("src", "/slideimage/?Number=" + (data.currentSlideNumber + 1));
+						$("#nextSlideImg").attr("src", "/slideimage/?Number=" + (data.currentSlideNumber + 1));
 					});
 				}, 1000);
 				
@@ -28,6 +41,6 @@
 		</script>
 	</head>
 	<body>
-		<img id="currentSlideImg" />
+		<img id="nextSlideImg" />
 	</body>
 </html>
