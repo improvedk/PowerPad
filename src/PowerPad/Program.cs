@@ -15,6 +15,9 @@ namespace PowerPad
 
 		static void Main()
 		{
+			// Add global exception handler to log all exceptions
+			AppDomain.CurrentDomain.UnhandledException += handleUnhandledException;
+
 			// Clear cache
 			if (Directory.Exists(Settings.CacheDirectory))
 				Directory.Delete(Settings.CacheDirectory, true);
@@ -70,6 +73,15 @@ namespace PowerPad
 				while (Console.ReadLine() != "quit")
 				{ }
 			}
+		}
+
+		/// <summary>
+		/// Takes care of global exception handling by crudely logging exceptions to a simple text file
+		/// </summary>
+		static void handleUnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			// This will overwrite any previous exceptions, but it'll do for now
+			File.WriteAllText("Exception.txt", e.ExceptionObject.ToString());
 		}
 		
 		/// <summary>
