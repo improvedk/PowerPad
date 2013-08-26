@@ -28,16 +28,27 @@
 		<script src="jquery-2.0.3.min.js"></script>
 	
 		<script>
-			$(function() {
-				setInterval(function() {
-					$.ajax({
-						url: '/slideshowdata/'
-					}).done(function (data) {
-						$("#nextSlideImg").attr("src", "/slideimage/?Number=" + (data.currentSlideNumber + 1));
-					});
-				}, 1000);
-				
+			var currentSlideNumberOnDisplay = null;
+
+			$(function () {
+				// Update the display once a second
+				setInterval(updateDisplay, 1000);
 			});
+			
+			function updateDisplay() {
+				// Get fresh data
+				$.ajax({
+					url: '/slideshowdata/'
+				}).done(function (data) {
+					
+					// Update the slide image, but only if slide has changed
+					if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
+						$("#nextSlideImg").attr("src", "/slideimage/?Number=" + (data.currentSlideNumber + 1));
+						currentSlideNumberOnDisplay = data.currentSlideNumber;
+					}
+					
+				});
+			}
 		</script>
 	</head>
 	<body>
