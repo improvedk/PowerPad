@@ -1,11 +1,12 @@
-﻿using System;
+﻿using PowerPad.RouteHandlers;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
-using PowerPad.RouteHandlers;
 
 namespace PowerPad
 {
@@ -27,9 +28,8 @@ namespace PowerPad
 			get
 			{
 				foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
-					foreach (var ua in ni.GetIPProperties().UnicastAddresses)
-						if (ua.Address.AddressFamily == AddressFamily.InterNetwork)
-							yield return "http://" + ua.Address + ":" + portNumber + "/";
+					foreach (var ua in ni.GetIPProperties().UnicastAddresses.Where(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork))
+						yield return "http://" + ua.Address + ":" + portNumber + "/";
 			}
 		}
 
