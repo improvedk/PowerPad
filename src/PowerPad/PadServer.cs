@@ -82,6 +82,11 @@ namespace PowerPad
 			if (!path.EndsWith("/"))
 				path += "/";
 
+			// By default, we don't want to cache anything
+			context.Response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+			context.Response.AddHeader("Pragma", "no-cache");
+			context.Response.AddHeader("Expires", "0");
+
 			// Locate route/error handler, if none found, return 404
 			using (var sw = new StreamWriter(context.Response.OutputStream))
 			{
