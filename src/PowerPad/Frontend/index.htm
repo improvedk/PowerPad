@@ -11,6 +11,7 @@
 				padding: 0;
 				margin: 0;
 				font-family: Verdana;
+				box-sizing: border-box;
 			}
 
 			html, body {
@@ -24,6 +25,29 @@
 				width: 100%;
 				height: 100%;
 			}
+
+			#status {
+				position: absolute;
+				width: 300px;
+				top: 20px;
+				left: 50%;
+				margin-left: -150px;
+				padding: 7px;	  
+				border-radius: 5px;
+				box-shadow: 2px 2px 7px #444;
+				font-weight: bold;
+				display: none;
+			}
+
+			#status.error {
+				border: 1px solid #F00;
+				background-color: #FCC;
+			}
+
+			#status.information {
+				border: 1px solid #FF0;
+				background-color: #FFC;
+			}
 		</style>
 		<script src="jquery-2.0.3.min.js"></script>
 	
@@ -32,26 +56,75 @@
 
 			$(function () {
 				// Update the display once a second
-				setInterval(updateDisplay, 1000);
+				setInterval(function () {
+					$.ajax({
+						url: '/slideshowdata/',
+						timeout: 2000,
+						success: processData,
+						error: processFailure
+					});
+				}, 1000);
 			});
 			
-			function updateDisplay() {
-				// Get fresh data
-				$.ajax({
-					url: '/slideshowdata/'
-				}).done(function (data) {
-					
-					// Update the slide image, but only if slide has changed
-					if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
-						$("#nextSlideImg").attr("src", "/slideimage/?Number=" + (data.currentSlideNumber + 1));
-						currentSlideNumberOnDisplay = data.currentSlideNumber;
-					}
-					
-				});
+			function setStatus (status) {
+				var $status = $('#status');
+
+				$status.removeClass();
+				$status.addClass('information');
+				$status.html(status);
+				$status.fadeIn();
+			}
+			
+			function setErrorStatus (status) {
+				var $status = $('#status');
+
+				$status.removeClass();
+				$status.addClass('error');
+				$status.html(status);
+				$status.fadeIn();
+			}
+			
+			function clearStatus () {
+				$('#status').fadeOut();
+			}
+
+			function processFailure(jqXHR) {
+				console.log(jqXHR.status + ' ' + jqXHR.responseText);
+				
+				switch (jqXHR.status) {
+					case 404:
+						switch (jqXHR.responseText) {
+							case 'No active slide show':
+								setStatus('Slide show not running...');
+								return;
+								
+							case undefined:
+								setErrorStatus('Lost connection to PowerPad server');
+								return;
+						}
+						return;
+						
+					case 0:
+						setErrorStatus('Lost connection to PowerPad server');
+						return;
+				}
+				
+				setErrorStatus('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
+			}
+			
+			function processData (data) {
+				clearStatus();
+
+				// Update the slide image, but only if slide has changed
+				if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
+					$('#nextSlideImg').attr('src', '/slideimage/?Number=' + (data.currentSlideNumber + 1));
+					currentSlideNumberOnDisplay = data.currentSlideNumber;
+				}
 			}
 		</script>
 	</head>
 	<body>
 		<img id="nextSlideImg" />
+		<div id="status" />
 	</body>
 </html>

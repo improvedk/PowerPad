@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Web.Script.Serialization;
 
 namespace PowerPad.RouteHandlers
@@ -17,15 +18,29 @@ namespace PowerPad.RouteHandlers
 				return;
 			}
 
-			// Return current slide show state
-			var preso = Program.ActiveSlideShow.Presentation;
-			var state = new {
-				numberOfSlides = preso.Slides.Count,
-				currentSlideNumber = Program.ActiveSlideShow.View.CurrentShowPosition
-			};
+			// As we can't lock on the program itself, the slideshow might end while we're reading from it
+			try
+			{
+				// Return current slide show state
+				var preso = Program.ActiveSlideShow.Presentation;
+				var state = new {
+					numberOfSlides = preso.Slides.Count,
+					currentSlideNumber = Program.ActiveSlideShow.View.CurrentShowPosition
+				};
 
-			var serializer = new JavaScriptSerializer();
-			writer.Write(serializer.Serialize(state));
+				var serializer = new JavaScriptSerializer();
+				writer.Write(serializer.Serialize(state));
+			}
+			catch (COMException ex)
+			{
+				if (ex.Message.Contains("There is currently no slide show view for this presentation"))
+				{
+					new ErrorHandler(404, "No active slide show").HandleRequest(context, writer);
+					return;
+				}
+
+				throw;
+			}
 		}
 	}
 }

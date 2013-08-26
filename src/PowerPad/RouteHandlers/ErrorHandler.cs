@@ -23,7 +23,7 @@ namespace PowerPad.RouteHandlers
 		public void HandleRequest(HttpListenerContext context, StreamWriter sw)
 		{
 			context.Response.StatusCode = errorCode;
-			sw.WriteLine("Error: " + message);
+			sw.Write(message);
 		}
 	}
 }
