@@ -56,7 +56,7 @@
 				top: 0;
 				width: 100%;
 				height: 15px;
-				/*display: none;*/
+				display: none;
 			}
 		</style>
 	
@@ -68,17 +68,20 @@
 				setInterval(function () {
 					$.ajax({
 						url: '/slideshowdata/',
-						timeout: 2000,
+						timeout: 1000,
 						success: processData,
 						error: processFailure
 					});
 				}, 1000);
 			});
 
+			// Handles display of progress bar
 			var ProgressBar = new function () {
+				var $bar;
+				$(function () { $bar = $('#progressBar'); });
+				
 				return {
 					setProgress: function (progress) {
-						var $bar = $('#progressBar');
 						var color = 'rgb(0,255,0)';
 						
 						// 00-49%:  Green
@@ -97,29 +100,33 @@
 					}
 				};
 			}();
-			
-			function setStatus (status) {
-				var $status = $('#status');
 
-				$status.removeClass();
-				$status.addClass('information');
-				$status.html(status);
-				$status.fadeIn();
-			}
+			// Handles display of status messages
+			var Status = new function () {
+				var $status;
+				$(function () { $status = $('#status'); });
+				
+				return {
+					info: function (msg) {
+						$status.removeClass();
+						$status.addClass('information');
+						$status.html(msg);
+						$status.fadeIn();
+					},
+					
+					error: function (msg) {
+						$status.removeClass();
+						$status.addClass('error');
+						$status.html(msg);
+						$status.fadeIn();
+					},
+					
+					clear: function () {
+						$status.fadeOut();
+					}
+				};
+			}();
 			
-			function setErrorStatus (status) {
-				var $status = $('#status');
-
-				$status.removeClass();
-				$status.addClass('error');
-				$status.html(status);
-				$status.fadeIn();
-			}
-			
-			function clearStatus () {
-				$('#status').fadeOut();
-			}
-
 			function processFailure(jqXHR) {
 				console.log(jqXHR.status + ' ' + jqXHR.responseText);
 				
@@ -127,25 +134,25 @@
 					case 404:
 						switch (jqXHR.responseText) {
 							case 'No active slide show':
-								setStatus('Slide show not running...');
+								Status.info('Slide show not running...');
 								return;
 								
 							case undefined:
-								setErrorStatus('Lost connection to PowerPad server');
+								Status.error('Lost connection to PowerPad server');
 								return;
 						}
 						return;
 						
 					case 0:
-						setErrorStatus('Lost connection to PowerPad server');
+						Status.error('Lost connection to PowerPad server');
 						return;
 				}
 				
-				setErrorStatus('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
+				Status.error('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
 			}
 			
 			function processData (data) {
-				clearStatus();
+				Status.clear();
 
 				// Update the slide image, but only if slide has changed
 				if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
