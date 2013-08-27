@@ -55,35 +55,52 @@
 				left: 0;
 				top: 0;
 				width: 100%;
-				height: 15px;
+				height: 40px;
 				display: none;
 			}
+
+			#currentTime {
+				position: absolute;
+				top: 0;
+				left: 50%;
+				margin-left: -60px;
+				width: 120px;
+				font-size: 32px;
+				padding: 4px;
+				text-align: center;
+				font-weight: bold;
+				font-family: "Lucida Console", Monaco, monospace;
+			}
+
+			#startTime, #endTime { position: absolute; top: 0; }
+			#startTime { left: 0; }
+			#endTime { right: 0; }
+
+			#startTime > input, #endTime > input {
+				height: 30px;
+				width: 80px;
+				border: 0;
+				font-size: 20px;
+				padding: 4px;
+				border-radius: 0;
+				text-align: center;
+				font-weight: bold;
+				font-family: "Lucida Console", Monaco, monospace;
+				color: #444;
+				background-color: transparent;
+			}
 		</style>
-	
+		
 		<script>
-			var currentSlideNumberOnDisplay = null;
-
-			$(function () {
-				// Update the display once a second
-				setInterval(function () {
-					$.ajax({
-						url: '/slideshowdata/',
-						timeout: 1000,
-						success: processData,
-						error: processFailure
-					});
-				}, 1000);
-			});
-
 			// Handles display of progress bar
 			var ProgressBar = new function () {
 				var $bar;
 				$(function () { $bar = $('#progressBar'); });
-				
+
 				return {
 					setProgress: function (progress) {
 						var color = 'rgb(0,255,0)';
-						
+
 						// 00-49%:  Green
 						// 50-64%:  Yellow
 						// 65-74%:	Orange
@@ -105,7 +122,7 @@
 			var Status = new function () {
 				var $status;
 				$(function () { $status = $('#status'); });
-				
+
 				return {
 					info: function (msg) {
 						$status.removeClass();
@@ -113,39 +130,57 @@
 						$status.html(msg);
 						$status.fadeIn();
 					},
-					
+
 					error: function (msg) {
 						$status.removeClass();
 						$status.addClass('error');
 						$status.html(msg);
 						$status.fadeIn();
 					},
-					
+
 					clear: function () {
 						$status.fadeOut();
 					}
 				};
 			}();
+		</script>
+	
+		<script>
+			var currentSlideNumberOnDisplay = null;
+
+			$(function () {
+				// Update the display once a second
+				setInterval(function () {
+					$.ajax({
+						url: '/slideshowdata/',
+						timeout: 1000,
+						success: processData,
+						error: processFailure
+					});
+				}, 1000);
+
+				ProgressBar.setProgress(49);
+			});
 			
 			function processFailure(jqXHR) {
 				console.log(jqXHR.status + ' ' + jqXHR.responseText);
 				
 				switch (jqXHR.status) {
-					case 404:
-						switch (jqXHR.responseText) {
-							case 'No active slide show':
-								Status.info('Slide show not running...');
-								return;
-								
-							case undefined:
-								Status.error('Lost connection to PowerPad server');
-								return;
-						}
+				case 404:
+					switch (jqXHR.responseText) {
+					case 'No active slide show':
+						Status.info('Slide show not running...');
 						return;
-						
-					case 0:
+								
+					case undefined:
 						Status.error('Lost connection to PowerPad server');
 						return;
+					}
+					return;
+						
+				case 0:
+					Status.error('Lost connection to PowerPad server');
+					return;
 				}
 				
 				Status.error('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
@@ -162,9 +197,13 @@
 			}
 		</script>
 	</head>
+
 	<body>			   
 		<img id="nextSlideImg" />
 		<div id="status"></div>
 		<div id="progressBar"></div>
+		<div id="startTime"><input type="text" value="17:15" /></div>
+		<div id="endTime"><input type="text" value="18:15" /></div>
+		<div id="currentTime">17:45</div>
 	</body>
 </html>
