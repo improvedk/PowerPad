@@ -1,4 +1,4 @@
-﻿@topBarHeight: 40px;
+﻿@barHeight: 40px;
 @fontFamily: "Lucida Console", Monaco, monospace;
 
 * {
@@ -39,7 +39,7 @@ html, body {
 #status {
 	position: absolute;
 	width: 300px;
-	top: @topBarHeight - 5px;
+	top: @barHeight - 5px;
 	left: 50%;
 	margin-left: -150px;
 	padding: 7px;
@@ -65,7 +65,7 @@ html, body {
 	left: 0;
 	top: 0;
 	width: 100%;
-	height: @topBarHeight;
+	height: @barHeight;
 	display: none;
 }
 
@@ -74,7 +74,7 @@ html, body {
 	bottom: 0;
 	left: 0;
 	width: 100%;
-	height: @topBarHeight;
+	height: @barHeight;
 	display: none;
 }
 
@@ -87,7 +87,7 @@ html, body {
 	margin-left: -100px;
 	font-family: @fontFamily;
 	font-size: 32px;
-	padding: 4px 0 4px 0;
+	line-height: @barHeight;
 	font-weight: bold;
 }
 
@@ -98,7 +98,7 @@ html, body {
 	margin-left: -60px;
 	width: 120px;
 	font-size: 32px;
-	padding: 4px 0 4px 0;
+	line-height: @barHeight;
 	text-align: center;
 	font-weight: bold;
 	font-family: @fontFamily;
@@ -107,7 +107,7 @@ html, body {
 #startTime, #endTime {
 	position: absolute;
 	top: 0;
-	height: @topBarHeight;
+	height: @barHeight;
 	width: 80px;
 	border: 0;
 	font-size: 20px;
