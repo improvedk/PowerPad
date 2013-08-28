@@ -12,9 +12,9 @@
 
 	<script>
 		// Handles display of progress bar
-		var ProgressBar = new function () {
+		function ProgressBar (selector) {
 			var $bar;
-			$(function () { $bar = $('#progressBar'); });
+			$(function () { $bar = $(selector); });
 
 			return {
 				setProgress: function (progress) {
@@ -38,7 +38,7 @@
 					$bar.show();
 				}
 			};
-		}();
+		};
 
 		// Handles display of status messages
 		var Status = new function () {
@@ -68,30 +68,18 @@
 	</script>
 
 	<script>
-		var currentSlideNumberOnDisplay = null;
+		var lastData = null;
+		var timeProgressBar = new ProgressBar('#timeBar');
+		var slideProgressBar = new ProgressBar('#slideBar');
 
 		$(function () {
-			// Set default time values
+			// Set time values
 			var date = new Date();
 			var defaultStartTime = date.getHours() + ':00';
 			var defaultEndTime = date.getHours() == 23 ? '23:59' : (date.getHours() + 1) + ':00';
 			
 			$('#startTime').text(localStorage.getItem('startTime') != null ? localStorage.getItem('startTime') : defaultStartTime);
 			$('#endTime').text(localStorage.getItem('endTime') != null ? localStorage.getItem('endTime') : defaultEndTime);
-			updateProgress();
-			
-			// Main loop that updates display
-			setInterval(function () {
-				$.ajax({
-					url: '/slideshowdata/',
-					timeout: 1000,
-					cache: true,
-					success: processData,
-					error: processFailure
-				});
-
-				updateProgress();
-			}, 1000);
 
 			// Wire up time clicks
 			$('#endTime, #startTime').on('click', function () {
@@ -106,18 +94,37 @@
 
 				// Set value & update progress
 				$(this).text(time);
-				updateProgress();
+				updateTimeProgress();
 			});
-		});
 
+			// Update progress to begin with
+			updateTimeProgress();
+			
+			// Reset slide progress
+			slideProgressBar.setProgress(0);
+			
+			// Main loop that updates display
+			setInterval(function () {
+				$.ajax({
+					url: '/slideshowdata/',
+					timeout: 1000,
+					cache: true,
+					success: processData,
+					error: processFailure
+				});
+
+				updateTimeProgress();
+			}, 1000);
+		});
+		
 		// Updates the current progress based on the start & end times
-		function updateProgress() {
+		function updateTimeProgress () {
 			var startTime = $('#startTime').text();
 			var endTime = $('#endTime').text();
 			
 			// Unless we have valid times, we can't show the progress bar
 			if (!isValidTime(startTime) || !isValidTime(endTime)) {
-				ProgressBar.setProgress(0);
+				timeProgressBar.setProgress(0);
 				return;
 			}
 
@@ -128,7 +135,7 @@
 
 			// Negative time?
 			if (presentationDurationInSeconds <= 0) {
-				ProgressBar.setProgress(0);
+				timeProgressBar.setProgress(0);
 				return;
 			}
 
@@ -138,16 +145,16 @@
 			
 			// Handle current time being either before or after the presentation
 			if (currentTimeInSeconds < startTimeInSeconds) {
-				ProgressBar.setProgress(0);
+				timeProgressBar.setProgress(0);
 				return;
 			} else if (currentTimeInSeconds > endTimeInSeconds) {
-				ProgressBar.setProgress(100);
+				timeProgressBar.setProgress(100);
 				return;
 			}
 			
 			// If we're in the middle of a presentation, calculate the progress
 			var progress = (currentTimeInSeconds - startTimeInSeconds) / presentationDurationInSeconds * 100;
-			ProgressBar.setProgress(progress);
+			timeProgressBar.setProgress(progress);
 		}
 		
 		// Is the input a valid time in the XX:YY format?
@@ -157,21 +164,21 @@
 
 		function processFailure (jqXHR) {
 			switch (jqXHR.status) {
-				case 404:
-					switch (jqXHR.responseText) {
-						case 'No active slide show':
-							Status.info('Slide show not running...');
-							return;
-
-						case undefined:
-							Status.error('Lost connection to PowerPad server');
-							return;
-					}
+			case 404:
+				switch (jqXHR.responseText) {
+				case 'No active slide show':
+					Status.info('Slide show not running...');
 					return;
 
-				case 0:
+				case undefined:
 					Status.error('Lost connection to PowerPad server');
 					return;
+				}
+				return;
+
+			case 0:
+				Status.error('Lost connection to PowerPad server');
+				return;
 			}
 
 			Status.error('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
@@ -180,22 +187,40 @@
 		function processData (data) {
 			Status.clear();
 
-			// Update the slide image, but only if slide has changed
-			if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
-				$('#nextSlideImg').attr('src', '/slideimage/?Number=' + (data.currentSlideNumber + 1));
-				currentSlideNumberOnDisplay = data.currentSlideNumber;
+			// Update status, but only if slide has changed
+			if (lastData == null || lastData.currentSlideNumber != data.currentSlideNumber) {
+				
+				// Are we on the last slide?
+				if (data.currentSlideNumber >= data.numberOfSlides) {
+					$('#nextSlideImg').attr('src', 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==');
+					$('#currentSlide').text(data.numberOfSlides + ' / ' + data.numberOfSlides);
+					$('#endMessage').show();
+				} else {
+					$('#nextSlideImg').attr('src', '/slideimage/?Number=' + (data.currentSlideNumber + 1));
+					$('#currentSlide').text((data.currentSlideNumber + 1) + ' / ' + data.numberOfSlides);
+					$('#endMessage').hide();
+				}
+
+				// Update slide progress
+				slideProgressBar.setProgress(data.currentSlideNumber / data.numberOfSlides * 100);
 			}
+			
+			// Always store last data retrieved from server
+			lastData = data;
 		}
 	</script>
 
 </head>
 
 <body>
-	<img id="nextSlideImg" />
+	<img id="nextSlideImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+	<div id="endMessage">End of slide show</div>
 	<div id="status"></div>
-	<div id="progressBar"></div>
+	<div id="timeBar"></div>
 	<div id="startTime" data-message="When does the presentation begin?">17:15</div>
 	<div id="endTime" data-message="When does the presentation end?">18:15</div>
 	<div id="currentTime">17:45</div>
+	<div id="slideBar"></div>
+	<div id="currentSlide"></div>
 </body>
 </html>
