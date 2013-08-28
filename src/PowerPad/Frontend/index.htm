@@ -22,18 +22,22 @@
 					if (progress > 100)
 						progress = 100;
 					else if (progress < 0)
-						processData = 0;
+						progress = 0;
 
-					// Calculate color of bar depending on progress
-					// 0-49%: Green, 50-64%: Yellow, 65-74%: Orange, 75-100%: Red
-					var color = 'rgb(0,255,0)';
-					if (progress >= 75)
-						color = 'rgb(255, 0, 0)';
-					else if (progress >= 65)
-						color = 'rgb(255, 165, 0)';
-					else if (progress >= 50)
-						color = 'rgb(255, 255, 0)';
+					// Calculate color as a linear progression from green to red
+					var startColor = 0x00FF00;
+					var endColor = 0xFF0000;
 
+					var diffR = (startColor >> 16 & 0xFF) - (endColor >> 16 & 0xFF);
+					var diffG = (startColor >> 8 & 0xFF) - (endColor >> 8 & 0xFF);
+					var diffB = (startColor & 0xFF) - (endColor & 0xFF);
+					
+					var currentR = parseInt((startColor >> 16 & 0xFF) - (diffR * progress / 100));
+					var currentG = parseInt((startColor >> 8 & 0xFF) - (diffG * progress / 100));
+					var currentB = parseInt((startColor & 0xFF) - (diffB * progress / 100));
+					
+					var color = 'rgb(' + currentR + ',' + currentG + ',' + currentB + ')';
+					
 					$bar.css('background-image', '-webkit-linear-gradient(left, ' + color + ' 0%, ' + color + ' ' + progress + '%, rgba(127,127,127,0.2) ' + progress + '%)');
 					$bar.show();
 				}
@@ -101,6 +105,7 @@
 			updateTimeProgress();
 			
 			// Reset slide progress
+			console.log(0);
 			slideProgressBar.setProgress(0);
 			
 			// Main loop that updates display
@@ -202,7 +207,8 @@
 				}
 
 				// Update slide progress
-				slideProgressBar.setProgress(data.currentSlideNumber / data.numberOfSlides * 100);
+				console.log(Math.ceil(data.currentSlideNumber / data.numberOfSlides * 100));
+				slideProgressBar.setProgress(Math.ceil(data.currentSlideNumber / data.numberOfSlides * 100));
 			}
 			
 			// Always store last data retrieved from server
