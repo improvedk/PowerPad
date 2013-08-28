@@ -85,6 +85,7 @@
 				$.ajax({
 					url: '/slideshowdata/',
 					timeout: 1000,
+					cache: true,
 					success: processData,
 					error: processFailure
 				});

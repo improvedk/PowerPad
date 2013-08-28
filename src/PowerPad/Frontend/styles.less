@@ -1,4 +1,6 @@
-﻿* {
+﻿@topBarHeight: 40px;
+
+* {
 	padding: 0;
 	margin: 0;
 	font-family: Verdana;
@@ -21,7 +23,7 @@ html, body {
 #status {
 	position: absolute;
 	width: 300px;
-	top: 35px;
+	top: @topBarHeight - 5px;
 	left: 50%;
 	margin-left: -150px;
 	padding: 7px;
@@ -30,16 +32,16 @@ html, body {
 	font-weight: bold;
 	display: none;
 	z-index: 10;
-}
 
-#status.error {
-	border: 1px solid #F00;
-	background-color: #FCC;
-}
+	&.error {
+		border: 1px solid #F00;
+		background-color: #FCC;
+	}
 
-#status.information {
-	border: 1px solid #FF0;
-	background-color: #FFC;
+	&.information {
+		border: 1px solid #FF0;
+		background-color: #FFC;
+	}
 }
 
 #progressBar {
@@ -47,7 +49,7 @@ html, body {
 	left: 0;
 	top: 0;
 	width: 100%;
-	height: 40px;
+	height: @topBarHeight;
 	display: none;
 }
 
@@ -67,7 +69,7 @@ html, body {
 #startTime, #endTime {
 	position: absolute;
 	top: 0;
-	height: 40px;
+	height: @topBarHeight;
 	width: 80px;
 	border: 0;
 	font-size: 20px;
