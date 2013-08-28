@@ -108,6 +108,9 @@
 			console.log(0);
 			slideProgressBar.setProgress(0);
 			
+			// Scroll to bottom to hide address bar on iPad
+			window.scrollTo(0, document.body.scrollHeight);
+			
 			// Main loop that updates display
 			setInterval(function () {
 				$.ajax({
