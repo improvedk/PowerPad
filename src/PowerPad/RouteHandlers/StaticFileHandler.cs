@@ -15,7 +15,9 @@ namespace PowerPad.RouteHandlers
 			{ ".js", "application/javascript" },
 			{ ".htm", "text/html" },
 			{ ".jpg", "image/jpeg" },
-			{ ".png", "image/png" }
+			{ ".png", "image/png" },
+			{ ".css", "text/css" },
+			{ ".less", "text/css" }
 		};
 
 		internal StaticFileHandler(string path)

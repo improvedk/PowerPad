@@ -41,6 +41,8 @@ namespace PowerPad
 			// Setup routes
 			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "index.htm")));
 			routeHandlers.Add("/jquery-2.0.3.min.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "jquery-2.0.3.min.js")));
+			routeHandlers.Add("/styles.less/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "styles.less")));
+			routeHandlers.Add("/less.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "less.js")));
 			routeHandlers.Add("/slideimage/", new SlideImageHandler());
 			routeHandlers.Add("/slideshowdata/", new SlideShowDataHandler());
 
