@@ -105,7 +105,6 @@
 			updateTimeProgress();
 			
 			// Reset slide progress
-			console.log(0);
 			slideProgressBar.setProgress(0);
 			
 			// Scroll to bottom to hide address bar on iPad
@@ -210,7 +209,6 @@
 				}
 
 				// Update slide progress
-				console.log(Math.ceil(data.currentSlideNumber / data.numberOfSlides * 100));
 				slideProgressBar.setProgress(Math.ceil(data.currentSlideNumber / data.numberOfSlides * 100));
 			}
 			
