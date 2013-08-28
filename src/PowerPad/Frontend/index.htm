@@ -1,46 +1,48 @@
 ﻿<!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no, maximum-scale=1.0" />
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<title>PowerPad</title>
-		<script src="jquery-2.0.3.min.js"></script>
-		<style>
-			* {
-				padding: 0;
-				margin: 0;
-				font-family: Verdana;
-				box-sizing: border-box;
-			}
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>PowerPad</title>
 
-			html, body {
-				width: 100%;
-				height: 100%;
-				overflow: hidden;
-			}
+	<script src="jquery-2.0.3.min.js"></script>
 
-			#nextSlideImg {
-				/* This stretches the image to fit, but we'll accept it for simplicity */
-				width: 100%;
-				height: 100%;
-				z-index: 0;
-			}
+	<style>
+		* {
+			padding: 0;
+			margin: 0;
+			font-family: Verdana;
+			box-sizing: border-box;
+		}
 
-			#status {
-				position: absolute;
-				width: 300px;
-				top: 35px;
-				left: 50%;
-				margin-left: -150px;
-				padding: 7px;	  
-				border-radius: 5px;
-				box-shadow: 2px 2px 7px #444;
-				font-weight: bold;
-				display: none;
-				z-index: 10;
-			}
+		html, body {
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+
+		#nextSlideImg {
+			/* This stretches the image to fit, but we'll accept it for simplicity */
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+		}
+
+		#status {
+			position: absolute;
+			width: 300px;
+			top: 35px;
+			left: 50%;
+			margin-left: -150px;
+			padding: 7px;
+			border-radius: 5px;
+			box-shadow: 2px 2px 7px #444;
+			font-weight: bold;
+			display: none;
+			z-index: 10;
+		}
 
 			#status.error {
 				border: 1px solid #F00;
@@ -52,160 +54,238 @@
 				background-color: #FFC;
 			}
 
-			#progressBar {
-				position: absolute;
-				left: 0;
-				top: 0;
-				width: 100%;
-				height: 40px;
-				display: none;
-			}
+		#progressBar {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 40px;
+			display: none;
+		}
 
-			#currentTime {
-				position: absolute;
-				top: 0;
-				left: 50%;
-				margin-left: -60px;
-				width: 120px;
-				font-size: 32px;
-				padding: 4px;
-				text-align: center;
-				font-weight: bold;
-				font-family: "Lucida Console", Monaco, monospace;
-			}
+		#currentTime {
+			position: absolute;
+			top: 0;
+			left: 50%;
+			margin-left: -60px;
+			width: 120px;
+			font-size: 32px;
+			padding: 4px;
+			text-align: center;
+			font-weight: bold;
+			font-family: "Lucida Console", Monaco, monospace;
+		}
 
-			#startTime, #endTime { position: absolute; top: 0; }
-			#startTime { left: 0; }
-			#endTime { right: 0; }
+		#startTime, #endTime {
+			position: absolute;
+			top: 0;
+			height: 40px;
+			width: 80px;
+			border: 0;
+			font-size: 20px;
+			padding: 4px;
+			border-radius: 0;
+			text-align: center;
+			font-weight: bold;
+			font-family: "Lucida Console", Monaco, monospace;
+			color: #444;
+			background-color: transparent;
+		}
 
-			#startTime > input, #endTime > input {
-				height: 30px;
-				width: 80px;
-				border: 0;
-				font-size: 20px;
-				padding: 4px;
-				border-radius: 0;
-				text-align: center;
-				font-weight: bold;
-				font-family: "Lucida Console", Monaco, monospace;
-				color: #444;
-				background-color: transparent;
-			}
-		</style>
-		
-		<script>
-			// Handles display of progress bar
-			var ProgressBar = new function () {
-				var $bar;
-				$(function () { $bar = $('#progressBar'); });
+		#startTime {
+			left: 0;
+		}
 
-				return {
-					setProgress: function (progress) {
-						var color = 'rgb(0,255,0)';
+		#endTime {
+			right: 0;
+		}
+	</style>
 
-						// 00-49%:  Green
-						// 50-64%:  Yellow
-						// 65-74%:	Orange
-						// 75-100%: Red
-						if (progress >= 75)
-							color = 'rgb(255, 0, 0)';
-						else if (progress >= 65)
-							color = 'rgb(255, 165, 0)';
-						else if (progress >= 50)
-							color = 'rgb(255, 255, 0)';
+	<script>
+		// Handles display of progress bar
+		var ProgressBar = new function () {
+			var $bar;
+			$(function () { $bar = $('#progressBar'); });
 
-						$bar.css('background-image', '-webkit-linear-gradient(left, ' + color + ' 0%, ' + color + ' ' + progress + '%, rgba(127,127,127,0.2) ' + progress + '%)');
-						$bar.show();
-					}
-				};
-			}();
+			return {
+				setProgress: function (progress) {
+					// Sanitize
+					if (progress > 100)
+						progress = 100;
+					else if (progress < 0)
+						processData = 0;
 
-			// Handles display of status messages
-			var Status = new function () {
-				var $status;
-				$(function () { $status = $('#status'); });
+					// Calculate color of bar depending on progress
+					// 0-49%: Green, 50-64%: Yellow, 65-74%: Orange, 75-100%: Red
+					var color = 'rgb(0,255,0)';
+					if (progress >= 75)
+						color = 'rgb(255, 0, 0)';
+					else if (progress >= 65)
+						color = 'rgb(255, 165, 0)';
+					else if (progress >= 50)
+						color = 'rgb(255, 255, 0)';
 
-				return {
-					info: function (msg) {
-						$status.removeClass();
-						$status.addClass('information');
-						$status.html(msg);
-						$status.fadeIn();
-					},
+					$bar.css('background-image', '-webkit-linear-gradient(left, ' + color + ' 0%, ' + color + ' ' + progress + '%, rgba(127,127,127,0.2) ' + progress + '%)');
+					$bar.show();
+				}
+			};
+		}();
 
-					error: function (msg) {
-						$status.removeClass();
-						$status.addClass('error');
-						$status.html(msg);
-						$status.fadeIn();
-					},
+		// Handles display of status messages
+		var Status = new function () {
+			var $status;
+			$(function () { $status = $('#status'); });
 
-					clear: function () {
-						$status.fadeOut();
-					}
-				};
-			}();
-		</script>
-	
-		<script>
-			var currentSlideNumberOnDisplay = null;
+			return {
+				info: function (msg) {
+					$status.removeClass();
+					$status.addClass('information');
+					$status.html(msg);
+					$status.fadeIn();
+				},
 
-			$(function () {
-				// Update the display once a second
-				setInterval(function () {
-					$.ajax({
-						url: '/slideshowdata/',
-						timeout: 1000,
-						success: processData,
-						error: processFailure
-					});
-				}, 1000);
+				error: function (msg) {
+					$status.removeClass();
+					$status.addClass('error');
+					$status.html(msg);
+					$status.fadeIn();
+				},
 
-				ProgressBar.setProgress(49);
-			});
+				clear: function () {
+					$status.fadeOut();
+				}
+			};
+		}();
+	</script>
+
+	<script>
+		var currentSlideNumberOnDisplay = null;
+
+		$(function () {
+			// Set default time values
+			var date = new Date();
+			var defaultStartTime = date.getHours() + ':00';
+			var defaultEndTime = date.getHours() == 23 ? '23:59' : (date.getHours() + 1) + ':00';
 			
-			function processFailure(jqXHR) {
-				console.log(jqXHR.status + ' ' + jqXHR.responseText);
-				
-				switch (jqXHR.status) {
+			$('#startTime').text(localStorage.getItem('startTime') != null ? localStorage.getItem('startTime') : defaultStartTime);
+			$('#endTime').text(localStorage.getItem('endTime') != null ? localStorage.getItem('endTime') : defaultEndTime);
+			updateProgress();
+			
+			// Main loop that updates display
+			setInterval(function () {
+				$.ajax({
+					url: '/slideshowdata/',
+					timeout: 1000,
+					success: processData,
+					error: processFailure
+				});
+
+				updateProgress();
+			}, 1000);
+
+			// Wire up time clicks
+			$('#endTime, #startTime').on('click', function () {
+				var time = prompt($(this).attr('data-message'), $(this).text());
+
+				// Validate value
+				if (!isValidTime(time))
+					return;
+
+				// Store value for future use
+				localStorage.setItem($(this).attr('id'), time);
+
+				// Set value & update progress
+				$(this).text(time);
+				updateProgress();
+			});
+		});
+
+		// Updates the current progress based on the start & end times
+		function updateProgress() {
+			var startTime = $('#startTime').text();
+			var endTime = $('#endTime').text();
+			
+			// Unless we have valid times, we can't show the progress bar
+			if (!isValidTime(startTime) || !isValidTime(endTime)) {
+				ProgressBar.setProgress(0);
+				return;
+			}
+
+			// Get valid second times
+			var startTimeInSeconds = parseInt(startTime.split(':')[0]) * 3600 + parseInt(startTime.split(':')[1]) * 60;
+			var endTimeInSeconds = parseInt(endTime.split(':')[0]) * 3600 + parseInt(endTime.split(':')[1]) * 60;
+			var presentationDurationInSeconds = (endTimeInSeconds - startTimeInSeconds);
+
+			// Negative time?
+			if (presentationDurationInSeconds <= 0) {
+				ProgressBar.setProgress(0);
+				return;
+			}
+
+			// Get current time in minutes
+			var date = new Date();
+			var currentTimeInSeconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+			
+			// Handle current time being either before or after the presentation
+			if (currentTimeInSeconds < startTimeInSeconds) {
+				ProgressBar.setProgress(0);
+				return;
+			} else if (currentTimeInSeconds > endTimeInSeconds) {
+				ProgressBar.setProgress(100);
+				return;
+			}
+			
+			// If we're in the middle of a presentation, calculate the progress
+			var progress = (currentTimeInSeconds - startTimeInSeconds) / presentationDurationInSeconds * 100;
+			ProgressBar.setProgress(progress);
+		}
+		
+		// Is the input a valid time in the XX:YY format?
+		function isValidTime (time) {
+			return /^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+		}
+
+		function processFailure (jqXHR) {
+			switch (jqXHR.status) {
 				case 404:
 					switch (jqXHR.responseText) {
-					case 'No active slide show':
-						Status.info('Slide show not running...');
-						return;
-								
-					case undefined:
-						Status.error('Lost connection to PowerPad server');
-						return;
+						case 'No active slide show':
+							Status.info('Slide show not running...');
+							return;
+
+						case undefined:
+							Status.error('Lost connection to PowerPad server');
+							return;
 					}
 					return;
-						
+
 				case 0:
 					Status.error('Lost connection to PowerPad server');
 					return;
-				}
-				
-				Status.error('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
 			}
-			
-			function processData (data) {
-				Status.clear();
 
-				// Update the slide image, but only if slide has changed
-				if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
-					$('#nextSlideImg').attr('src', '/slideimage/?Number=' + (data.currentSlideNumber + 1));
-					currentSlideNumberOnDisplay = data.currentSlideNumber;
-				}
+			Status.error('Unexpected error (' + jqXHR.status + '): ' + jqXHR.responseText);
+		}
+
+		function processData (data) {
+			Status.clear();
+
+			// Update the slide image, but only if slide has changed
+			if (currentSlideNumberOnDisplay != data.currentSlideNumber) {
+				$('#nextSlideImg').attr('src', '/slideimage/?Number=' + (data.currentSlideNumber + 1));
+				currentSlideNumberOnDisplay = data.currentSlideNumber;
 			}
-		</script>
-	</head>
+		}
+	</script>
 
-	<body>			   
-		<img id="nextSlideImg" />
-		<div id="status"></div>
-		<div id="progressBar"></div>
-		<div id="startTime"><input type="text" value="17:15" /></div>
-		<div id="endTime"><input type="text" value="18:15" /></div>
-		<div id="currentTime">17:45</div>
-	</body>
+</head>
+
+<body>
+	<img id="nextSlideImg" />
+	<div id="status"></div>
+	<div id="progressBar"></div>
+	<div id="startTime" data-message="When does the presentation begin?">17:15</div>
+	<div id="endTime" data-message="When does the presentation end?">18:15</div>
+	<div id="currentTime">17:45</div>
+</body>
 </html>
