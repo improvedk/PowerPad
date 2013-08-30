@@ -29,7 +29,13 @@ namespace PowerPad
 			{
 				foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
 					foreach (var ua in ni.GetIPProperties().UnicastAddresses.Where(ua => ua.Address.AddressFamily == AddressFamily.InterNetwork))
-						yield return "http://" + ua.Address + ":" + portNumber + "/";
+					{
+						var addr = ua.Address.GetAddressBytes();
+
+						// We don't care about APIPA addresses
+						if (addr[0] != 169)
+							yield return "http://" + ua.Address + ":" + portNumber + "/";
+					}
 			}
 		}
 
