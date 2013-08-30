@@ -125,7 +125,13 @@
 		});
 		
 		// Updates the current progress based on the start & end times
-		function updateTimeProgress () {
+		function updateTimeProgress() {
+			var date = new Date();
+			
+			// Set overall clock
+			$('#currentTime').text(date.getHours() + ':' + ((date.getMinutes() < 10 ? '0' : '') + date.getMinutes()));
+
+			// Get the presentation start & end times
 			var startTime = $('#startTime').text();
 			var endTime = $('#endTime').text();
 			
@@ -147,9 +153,8 @@
 			}
 
 			// Get current time in minutes
-			var date = new Date();
 			var currentTimeInSeconds = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
-			
+
 			// Handle current time being either before or after the presentation
 			if (currentTimeInSeconds < startTimeInSeconds) {
 				timeProgressBar.setProgress(0);
