@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.Office.Core;
+using Microsoft.Office.Interop.PowerPoint;
+using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Office.Core;
-using Microsoft.Office.Interop.PowerPoint;
+using System.Linq;
+using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
 {
@@ -21,7 +23,6 @@ namespace PowerPad
 			// Clear cache
 			if (Directory.Exists(Settings.CacheDirectory))
 				Directory.Delete(Settings.CacheDirectory, true);
-			Directory.CreateDirectory(Settings.CacheDirectory);
 
 			// Start server
 			using (var server = new PadServer(Settings.PortNumber))
@@ -131,11 +132,16 @@ namespace PowerPad
 			writeLine("Caching slides...");
 			writeLine("0%");
 
+			// Create cache directory
+			Directory.CreateDirectory(Settings.CacheDirectory);
+
 			// Loop slides, cache & report progress
 			int totalSlides = preso.Slides.Count;
 			int previousProgress = 0;
 			for (int i = 1; i <= totalSlides; i++)
 			{
+				Slide slide = null;
+
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
 				{
@@ -146,9 +152,32 @@ namespace PowerPad
 				// Only export if slide hasn't already been cached
 				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".jpg")))
 				{
+					slide = preso.Slides[i];
+
 					// Export slide
-					Slide slide = preso.Slides[i];
 					slide.Export(Path.Combine(Settings.CacheDirectory, i + ".jpg"), "jpg");
+				}
+
+				// Only export notes if they haven't already been cached
+				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".txt")))
+				{
+					if (slide == null)
+						slide = preso.Slides[i];
+
+					// We can only export notes if lside has a notes page
+					if (slide.HasNotesPage != MsoTriState.msoTrue)
+						continue;
+
+					// Attempt to find the shape for the slide notes frmae
+					var notesShape = slide.NotesPage.Shapes.Cast<Shape>()
+													.Where(s => s.Name == "Notes Placeholder 2")
+													.Where(s => s.HasTextFrame == MsoTriState.msoTrue)
+													.Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
+													.SingleOrDefault();
+
+					// If found, export the note contents
+					if (notesShape != null)
+						File.WriteAllText(Path.Combine(Settings.CacheDirectory, i + ".txt"), notesShape.TextFrame.TextRange.Text);
 				}
 
 				// Report progress
