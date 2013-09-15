@@ -23,9 +23,19 @@ namespace PowerPad.RouteHandlers
 			{
 				// Return current slide show state
 				var preso = Program.ActiveSlideShow.Presentation;
+				var currentSlideNumber = Program.ActiveSlideShow.View.CurrentShowPosition;
+
+				// Get notes, if they're available
+				string currentSlideNotes = null;
+				string slideNotesFilePath = Path.Combine(Settings.CacheDirectory, currentSlideNumber + ".txt");
+				if (File.Exists(slideNotesFilePath))
+					currentSlideNotes = File.ReadAllText(slideNotesFilePath);
+
+				// Return state to client
 				var state = new {
 					numberOfSlides = preso.Slides.Count,
-					currentSlideNumber = Program.ActiveSlideShow.View.CurrentShowPosition
+					currentSlideNumber,
+					currentSlideNotes
 				};
 
 				var serializer = new JavaScriptSerializer();
