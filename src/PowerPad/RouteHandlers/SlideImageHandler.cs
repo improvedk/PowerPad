@@ -33,7 +33,7 @@ namespace PowerPad.RouteHandlers
 				new ErrorHandler(404, "Slide does not exist").HandleRequest(context, sw);
 				return;
 			}
-
+			
 			// Serve slide image to user
 			var handler = new StaticFileHandler(Cache.GetImagePath(slideNumber));
 			handler.HandleRequest(context, sw);
