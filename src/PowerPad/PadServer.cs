@@ -44,16 +44,8 @@ namespace PowerPad
 			if (listenerThread != null)
 				throw new InvalidOperationException("Can't start already started PadServer");
 
-			// Setup routes
-			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "index.htm")));
-			routeHandlers.Add("/jquery-2.0.3.min.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "jquery-2.0.3.min.js")));
-			routeHandlers.Add("/styles.less/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "styles.less")));
-			routeHandlers.Add("/less.js/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "less.js")));
-			routeHandlers.Add("/slideimage/", new SlideImageHandler());
-			routeHandlers.Add("/slideshowdata/", new SlideShowDataHandler());
-
-			// Setup error handlers
-			errorHandlers.Add(404, new ErrorHandler(404));
+			setupRoutes();
+			setupErrorHandlers();
 
 			// Setup listener and start listening
 			listener = new HttpListener();
@@ -63,6 +55,28 @@ namespace PowerPad
 			listenerThread.Start();
 
 			listener.Start();
+		}
+
+		private void setupErrorHandlers()
+		{
+			errorHandlers.Add(404, new ErrorHandler(404));
+		}
+
+		private void setupRoutes()
+		{
+			// Add default view
+			routeHandlers.Add("/", new StaticFileHandler(Path.Combine(Settings.FrontendDirectory, "Views/default.htm")));
+
+			// Add static files
+			foreach (var file in Directory.GetFiles(Settings.FrontendDirectory, "*", SearchOption.AllDirectories))
+			{
+				string filePath = file.Replace(Settings.FrontendDirectory, "").Replace("\\", "/");
+				routeHandlers.Add(filePath, new StaticFileHandler(file));
+			}
+
+			// Add data handlers
+			routeHandlers.Add("/slideimage/", new SlideImageHandler());
+			routeHandlers.Add("/slideshowdata/", new SlideShowDataHandler());
 		}
 
 		/// <summary>
@@ -87,8 +101,6 @@ namespace PowerPad
 
 			// Make sure path always ends with a /
 			string path = context.Request.Url.LocalPath;
-			if (!path.EndsWith("/"))
-				path += "/";
 
 			// By default, we don't want to cache anything
 			context.Response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate");
