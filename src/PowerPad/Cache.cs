@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PowerPad
@@ -43,7 +44,7 @@ namespace PowerPad
 
 		internal static void SetNotes(int slideNumber, string noteValue)
 		{
-			notes[slideNumber] = noteValue;
+			notes[slideNumber] = noteValue.Replace("\r", Environment.NewLine);
 		}
 	}
 }
