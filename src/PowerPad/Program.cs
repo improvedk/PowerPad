@@ -140,14 +140,14 @@ namespace PowerPad
 			for (int i = 1; i <= totalSlides; i++)
 			{
 				Slide slide = preso.Slides[i];
-
+				
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
 				{
 					writeLine("Aborting cache since slide show has ended");
 					return;
 				}
-
+				
 				// Export slide image if it hasn't already been cached
 				if (!Cache.ImageIsCached(i))
 					preso.Slides[i].Export(Cache.GetImagePath(i), "jpg");
