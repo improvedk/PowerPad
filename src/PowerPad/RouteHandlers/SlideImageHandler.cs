@@ -28,15 +28,14 @@ namespace PowerPad.RouteHandlers
 			}
 
 			// Ensure slide image exists in cache
-			string slideCachePath = Path.Combine(Settings.CacheDirectory, slideNumber + ".jpg");
-			if (!File.Exists(slideCachePath))
+			if (!Cache.ImageIsCached(slideNumber))
 			{
 				new ErrorHandler(404, "Slide does not exist").HandleRequest(context, sw);
 				return;
 			}
 
 			// Serve slide image to user
-			var handler = new StaticFileHandler(slideCachePath);
+			var handler = new StaticFileHandler(Cache.GetImagePath(slideNumber));
 			handler.HandleRequest(context, sw);
 		}
 	}

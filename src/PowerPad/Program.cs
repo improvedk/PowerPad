@@ -21,8 +21,7 @@ namespace PowerPad
 			AppDomain.CurrentDomain.UnhandledException += handleUnhandledException;
 
 			// Clear cache
-			if (Directory.Exists(Settings.CacheDirectory))
-				Directory.Delete(Settings.CacheDirectory, true);
+			Cache.Clear();
 
 			// Start server
 			using (var server = new PadServer(Settings.PortNumber))
@@ -133,14 +132,14 @@ namespace PowerPad
 			writeLine("0%");
 
 			// Create cache directory
-			Directory.CreateDirectory(Settings.CacheDirectory);
+			Cache.EnsureDirectoryExists();
 
 			// Loop slides, cache & report progress
 			int totalSlides = preso.Slides.Count;
 			int previousProgress = 0;
 			for (int i = 1; i <= totalSlides; i++)
 			{
-				Slide slide = null;
+				Slide slide = preso.Slides[i];
 
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
@@ -149,35 +148,31 @@ namespace PowerPad
 					return;
 				}
 
-				// Only export if slide hasn't already been cached
-				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".jpg")))
+				// Export slide image if it hasn't already been cached
+				if (!Cache.ImageIsCached(i))
+					preso.Slides[i].Export(Cache.GetImagePath(i), "jpg");
+
+				// Export slide notes if they haven't already been cached
+				if (!Cache.NotesAreCached(i))
 				{
-					slide = preso.Slides[i];
+					string notes = "";
 
-					// Export slide
-					slide.Export(Path.Combine(Settings.CacheDirectory, i + ".jpg"), "jpg");
-				}
+					// We can only export notes if slide has a notes page
+					if (slide.HasNotesPage == MsoTriState.msoTrue)
+					{
+						// Attempt to find the shape for the slide notes frmae
+						var notesShape = slide.NotesPage.Shapes.Cast<Shape>()
+						                      .Where(s => s.Name == "Notes Placeholder 2")
+						                      .Where(s => s.HasTextFrame == MsoTriState.msoTrue)
+						                      .Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
+						                      .SingleOrDefault();
 
-				// Only export notes if they haven't already been cached
-				if (!File.Exists(Path.Combine(Settings.CacheDirectory, i + ".txt")))
-				{
-					if (slide == null)
-						slide = preso.Slides[i];
+						// If found, export the note contents
+						if (notesShape != null)
+							notes = notesShape.TextFrame.TextRange.Text;
+					}
 
-					// We can only export notes if lside has a notes page
-					if (slide.HasNotesPage != MsoTriState.msoTrue)
-						continue;
-
-					// Attempt to find the shape for the slide notes frmae
-					var notesShape = slide.NotesPage.Shapes.Cast<Shape>()
-													.Where(s => s.Name == "Notes Placeholder 2")
-													.Where(s => s.HasTextFrame == MsoTriState.msoTrue)
-													.Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
-													.SingleOrDefault();
-
-					// If found, export the note contents
-					if (notesShape != null)
-						File.WriteAllText(Path.Combine(Settings.CacheDirectory, i + ".txt"), notesShape.TextFrame.TextRange.Text);
+					Cache.SetNotes(i, notes);
 				}
 
 				// Report progress
