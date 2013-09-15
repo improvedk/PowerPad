@@ -1,10 +1,12 @@
-﻿@barHeight: 40px;
+﻿@barHeight: 30px;
 @fontFamily: "Lucida Console", Monaco, monospace;
 
 * {
 	padding: 0;
 	margin: 0;
 	font-family: Verdana;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 }
 
@@ -23,9 +25,9 @@ html, body {
 
 #notes {
 	position: absolute;
-	bottom: @barHeight;
+	bottom: 0;
 	font-size: 25px;
-	background-color: rgba(255, 255, 255, 0.75);
+	background-color: rgba(255, 255, 255, 0.9);
 	width: 100%;
 
 	ul {
@@ -85,24 +87,25 @@ html, body {
 
 #slideBar {
 	position: absolute;
-	bottom: 0;
+	top: @barHeight;
 	left: 0;
 	width: 100%;
-	height: @barHeight;
+	height: 20px;
 	display: none;
 }
 
 #currentSlide {
 	position: absolute;
-	bottom: 0;
+	top: @barHeight;
 	left: 50%;
 	width: 200px;
 	text-align: center;
 	margin-left: -100px;
 	font-family: @fontFamily;
-	font-size: 32px;
-	line-height: @barHeight;
+	font-size: 16px;
+	line-height: 20px;
 	font-weight: bold;
+	color: #FFF;
 }
 
 #currentTime {
@@ -111,7 +114,7 @@ html, body {
 	left: 50%;
 	margin-left: -60px;
 	width: 120px;
-	font-size: 32px;
+	font-size: 25px;
 	line-height: @barHeight;
 	text-align: center;
 	font-weight: bold;
