@@ -9,6 +9,7 @@
 	<link rel="stylesheet/less" type="text/css" href="/Views/default.less" />
 	<script src="/Libs/jquery-2.0.3.min.js"></script>
 	<script src="/Libs/less.js" type="text/javascript"></script>
+	<script src="/Libs/markdown.js" type="text/javascript"></script>
 
 	<script>
 		// Handles display of progress bar
@@ -38,7 +39,7 @@
 					
 					var color = 'rgb(' + currentR + ',' + currentG + ',' + currentB + ')';
 					
-					$bar.css('background-image', '-webkit-linear-gradient(left, ' + color + ' 0%, ' + color + ' ' + progress + '%, rgba(127,127,127,0.2) ' + progress + '%)');
+					$bar.css('background-image', '-webkit-linear-gradient(left, ' + color + ' 0%, ' + color + ' ' + progress + '%, rgba(255,255,255,0.5) ' + progress + '%)');
 					$bar.show();
 				}
 			};
@@ -215,6 +216,10 @@
 
 				// Update slide progress
 				slideProgressBar.setProgress(Math.ceil(data.currentSlideNumber / data.numberOfSlides * 100));
+				
+				// Update notes
+				var rawNote = data.currentSlideNotes;
+				$('#notes').html(markdown.toHTML(rawNote));
 			}
 			
 			// Always store last data retrieved from server
@@ -234,5 +239,6 @@
 	<div id="currentTime">17:45</div>
 	<div id="slideBar"></div>
 	<div id="currentSlide"></div>
+	<div id="notes"></div>
 </body>
 </html>

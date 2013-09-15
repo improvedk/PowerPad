@@ -21,6 +21,20 @@ html, body {
 	z-index: 0;
 }
 
+#notes {
+	position: absolute;
+	bottom: @barHeight;
+	font-size: 25px;
+	background-color: rgba(255, 255, 255, 0.75);
+	width: 100%;
+
+	ul {
+		li {
+			margin-left: 40px;
+		}
+	}
+}
+
 #endMessage {
 	position: absolute;
 	width: 100%;
@@ -116,7 +130,7 @@ html, body {
 	text-align: center;
 	font-weight: bold;
 	font-family: @fontFamily;
-	color: #444;
+	color: #000;
 	background-color: transparent;
 }
 

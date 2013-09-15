@@ -115,6 +115,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Frontend\Libs\markdown.js" />
     <Content Include="Frontend\Views\default.htm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
