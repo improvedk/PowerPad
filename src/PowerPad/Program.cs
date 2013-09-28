@@ -1,4 +1,5 @@
-﻿using Microsoft.Office.Core;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 using System;
 using System.Diagnostics;
@@ -234,7 +235,9 @@ namespace PowerPad
 
 		static void writeLine(object msg)
 		{
-			Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + ":\t" + msg);
+			string message = Regex.Replace(msg.ToString(), "\t", "   ");
+
+			Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + ":   " + message);
 		}
 
 		static void writeWarning(object msg)
