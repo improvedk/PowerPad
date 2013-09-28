@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
@@ -32,9 +31,9 @@ namespace PowerPad
 				server.Start();
 
 				// Report which addresses server is listening on
-				writeSuccess("Server now listening on:");
+				Log.Success("Server now listening on:");
 				foreach (var addr in server.ListeningAddresses)
-					writeSuccess("\t" + addr);
+					Log.Success("\t" + addr);
 
 				printHelp();
 			
@@ -47,15 +46,15 @@ namespace PowerPad
 				// Either hook into running instance or start a new instance of PowerPoint up
 				if (ppt.Visible == MsoTriState.msoTrue)
 				{
-					writeLine("Connected to running PowerPoint instance");
+					Log.Line("Connected to running PowerPoint instance");
 
 					// If there are any opened presentations, notify the user
 					if (ppt.Presentations.Count == 0)
-						writeLine("\tNo open presentations");
+						Log.Line("\tNo open presentations");
 					else
 					{
 						foreach (Presentation preso in ppt.Presentations)
-							writeLine("\t" + formatPresentationNameForConsole(preso));
+							Log.Line("\t" + formatPresentationNameForConsole(preso));
 					}
 
 					// Do we need to connect to a running slide show?
@@ -70,7 +69,7 @@ namespace PowerPad
 				}
 				else
 				{
-					writeLine("Starting up new PowerPoint instance");
+					Log.Line("Starting up new PowerPoint instance");
 					ppt.Activate();
 				}
 
@@ -91,7 +90,7 @@ namespace PowerPad
 							break;
 
 						default:
-							writeWarning("Unknown command: " + cmd);
+							Log.Warning("Unknown command: " + cmd);
 							break;
 					}
 				}
@@ -100,9 +99,9 @@ namespace PowerPad
 
 		static void printHelp()
 		{
-			writeLine("Available commands:");
-			writeLine("\tcache -- Caches the currently active slideshow");
-			writeLine("\tquit -- Ends the PowerPad process");
+			Log.Line("Available commands:");
+			Log.Line("\tcache -- Caches the currently active slideshow");
+			Log.Line("\tquit -- Ends the PowerPad process");
 		}
 
 		static string formatPresentationNameForConsole(Presentation preso)
@@ -131,8 +130,8 @@ namespace PowerPad
 		{
 			if (ActiveSlideShow != null && win.HWND != ActiveSlideShow.HWND)
 				return;
-			
-			writeLine("\tCurrent slide: " + win.View.CurrentShowPosition);
+
+			Log.Line("\tCurrent slide: " + win.View.CurrentShowPosition);
 		}
 
 		/// <summary>
@@ -141,7 +140,7 @@ namespace PowerPad
 		static void ppt_SlideShowEnd(Presentation pres)
 		{
 			ActiveSlideShow = null;
-			writeWarning("Ending slide show");
+			Log.Warning("Ending slide show");
 		}
 
 		/// <summary>
@@ -151,12 +150,12 @@ namespace PowerPad
 		{
 			if (ActiveSlideShow != null)
 			{
-				writeWarning("Ignoring new slide show as another is already active");
+				Log.Warning("Ignoring new slide show as another is already active");
 				return;
 			}
 
-			writeSuccess("Beginning slide show");
-			writeSuccess("\t" + formatPresentationNameForConsole(win.Presentation));
+			Log.Success("Beginning slide show");
+			Log.Success("\t" + formatPresentationNameForConsole(win.Presentation));
 
 			// Start the timer & store presentation references
 			ActiveSlideShow = win;
@@ -166,9 +165,9 @@ namespace PowerPad
 
 			// Report whether slideshow cache is already primed
 			if (ActiveSlideShowCache.AreAllSlidesCached(ActiveSlideShow.Presentation.Slides.Count))
-				writeSuccess("\tAll slides cached, ready to go!");
+				Log.Success("\tAll slides cached, ready to go!");
 			else
-				writeWarning("\tPresentation needs to be cached!");
+				Log.Warning("\tPresentation needs to be cached!");
 		}
 
 		static string computeHashForPresentation(Presentation preso)
@@ -184,12 +183,12 @@ namespace PowerPad
 		{
 			if (ActiveSlideShow == null || ActiveSlideShow.Presentation == null)
 			{
-				writeWarning("Can't cache slides as there is no active slideshow");
+				Log.Warning("Can't cache slides as there is no active slideshow");
 				return;
 			}
 
-			writeLine("Caching slides...");
-			writeLine("\t0%");
+			Log.Line("Caching slides...");
+			Log.Line("\t0%");
 
 			// Calculate hash to store cache, based on the presentation and it's last modification time
 			var preso = ActiveSlideShow.Presentation; 
@@ -209,7 +208,7 @@ namespace PowerPad
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
 				{
-					writeWarning("\tAborting cache since slide show has ended");
+					Log.Warning("\tAborting cache since slide show has ended");
 					return;
 				}
 				
@@ -239,12 +238,12 @@ namespace PowerPad
 				int percentage = (int)Math.Round((double)i / totalSlides * 100, 0);
 				if (percentage - previousProgress > 10 || percentage == 100)
 				{
-					writeLine("\t" + percentage + "%");
+					Log.Line("\t" + percentage + "%");
 					previousProgress = percentage;
 				}
 			}
 
-			writeSuccess("\tDone!");
+			Log.Success("\tDone!");
 		}
 
 		/// <summary>
@@ -252,29 +251,8 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_PresentationOpen(Presentation pres)
 		{
-			writeLine("Presentation opened");
-			writeLine("\t" + formatPresentationNameForConsole(pres));
-		}
-
-		static void writeLine(object msg)
-		{
-			string message = Regex.Replace(msg.ToString(), "\t", "   ");
-
-			Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + ":   " + message);
-		}
-
-		static void writeWarning(object msg)
-		{
-			Console.ForegroundColor = ConsoleColor.Yellow;
-			writeLine(msg);
-			Console.ResetColor();
-		}
-
-		static void writeSuccess(object msg)
-		{
-			Console.ForegroundColor = ConsoleColor.Green;
-			writeLine(msg);
-			Console.ResetColor();
+			Log.Line("Presentation opened");
+			Log.Line("\t" + formatPresentationNameForConsole(pres));
 		}
 	}
 }
