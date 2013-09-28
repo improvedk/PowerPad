@@ -35,6 +35,8 @@ namespace PowerPad
 				writeSuccess("Server now listening on:");
 				foreach (var addr in server.ListeningAddresses)
 					writeSuccess("\t" + addr);
+
+				printHelp();
 			
 				// Wire up PowerPoint events
 				ppt.PresentationOpen += ppt_PresentationOpen;
@@ -53,7 +55,7 @@ namespace PowerPad
 					else
 					{
 						foreach (Presentation preso in ppt.Presentations)
-							writeLine("\t" + formatPresentationNameForConsole(preso.Name) + " (" + preso.Slides.Count + " slides)");
+							writeLine("\t" + formatPresentationNameForConsole(preso));
 					}
 
 					// Do we need to connect to a running slide show?
@@ -96,12 +98,21 @@ namespace PowerPad
 			}
 		}
 
-		static string formatPresentationNameForConsole(string name)
+		static void printHelp()
 		{
-			if (name.Length > maxConsolePresentationNameLength)
-				return name.Substring(0, maxConsolePresentationNameLength) + "...";
+			writeLine("Available commands:");
+			writeLine("\tcache -- Caches the currently active slideshow");
+			writeLine("\tquit -- Ends the PowerPad process");
+		}
 
-			return name;
+		static string formatPresentationNameForConsole(Presentation preso)
+		{
+			string name = preso.Name;
+
+			if (preso.Name.Length > maxConsolePresentationNameLength)
+				name = preso.Name.Substring(0, maxConsolePresentationNameLength) + "...";
+
+			return name + " (" + preso.Slides.Count + ")";
 		}
 
 		/// <summary>
@@ -121,7 +132,7 @@ namespace PowerPad
 			if (ActiveSlideShow != null && win.HWND != ActiveSlideShow.HWND)
 				return;
 			
-			writeLine("Current slide: " + win.View.CurrentShowPosition);
+			writeLine("\tCurrent slide: " + win.View.CurrentShowPosition);
 		}
 
 		/// <summary>
@@ -130,7 +141,7 @@ namespace PowerPad
 		static void ppt_SlideShowEnd(Presentation pres)
 		{
 			ActiveSlideShow = null;
-			writeLine("Ending slide show");
+			writeWarning("Ending slide show");
 		}
 
 		/// <summary>
@@ -145,6 +156,7 @@ namespace PowerPad
 			}
 
 			writeSuccess("Beginning slide show");
+			writeSuccess("\t" + formatPresentationNameForConsole(win.Presentation));
 
 			// Start the timer & store presentation references
 			ActiveSlideShow = win;
@@ -154,9 +166,9 @@ namespace PowerPad
 
 			// Report whether slideshow cache is already primed
 			if (ActiveSlideShowCache.AreAllSlidesCached(ActiveSlideShow.Presentation.Slides.Count))
-				writeSuccess("All slides cached, ready to go!");
+				writeSuccess("\tAll slides cached, ready to go!");
 			else
-				writeWarning("Presentation needs to be cached!");
+				writeWarning("\tPresentation needs to be cached!");
 		}
 
 		static string computeHashForPresentation(Presentation preso)
@@ -177,7 +189,7 @@ namespace PowerPad
 			}
 
 			writeLine("Caching slides...");
-			writeLine("0%");
+			writeLine("\t0%");
 
 			// Calculate hash to store cache, based on the presentation and it's last modification time
 			var preso = ActiveSlideShow.Presentation; 
@@ -197,7 +209,7 @@ namespace PowerPad
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
 				{
-					writeWarning("Aborting cache since slide show has ended");
+					writeWarning("\tAborting cache since slide show has ended");
 					return;
 				}
 				
@@ -227,12 +239,12 @@ namespace PowerPad
 				int percentage = (int)Math.Round((double)i / totalSlides * 100, 0);
 				if (percentage - previousProgress > 10 || percentage == 100)
 				{
-					writeLine(percentage + "%");
+					writeLine("\t" + percentage + "%");
 					previousProgress = percentage;
 				}
 			}
 
-			writeSuccess("Done!");
+			writeSuccess("\tDone!");
 		}
 
 		/// <summary>
@@ -240,7 +252,8 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_PresentationOpen(Presentation pres)
 		{
-			writeLine("Presentation opened: " + formatPresentationNameForConsole(pres.Name) + " (" + pres.Slides.Count + " slides)");
+			writeLine("Presentation opened");
+			writeLine("\t" + formatPresentationNameForConsole(pres));
 		}
 
 		static void writeLine(object msg)
