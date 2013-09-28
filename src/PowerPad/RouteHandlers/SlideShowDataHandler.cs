@@ -29,7 +29,7 @@ namespace PowerPad.RouteHandlers
 				var state = new {
 					numberOfSlides = preso.Slides.Count,
 					currentSlideNumber,
-					currentSlideNotes = Cache.GetNotes(currentSlideNumber)
+					currentSlideNotes = Program.ActiveSlideShowCache.GetNote(currentSlideNumber)
 				};
 
 				var serializer = new JavaScriptSerializer();

@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
@@ -14,14 +16,12 @@ namespace PowerPad
 		private static readonly Stopwatch watch = new Stopwatch();
 		
 		public static SlideShowWindow ActiveSlideShow;
+		public static Cache ActiveSlideShowCache;
 
 		static void Main()
 		{
 			// Add global exception handler to log all exceptions
 			AppDomain.CurrentDomain.UnhandledException += handleUnhandledException;
-
-			// Clear cache
-			Cache.Clear();
 
 			// Start server
 			using (var server = new PadServer(Settings.PortNumber))
@@ -29,9 +29,9 @@ namespace PowerPad
 				server.Start();
 
 				// Report which addresses server is listening on
-				writeLine("Server now listening on:");
+				writeSuccess("Server now listening on:");
 				foreach (var addr in server.ListeningAddresses)
-					writeLine("\t" + addr);
+					writeSuccess("\t" + addr);
 			
 				// Wire up PowerPoint events
 				ppt.PresentationOpen += ppt_PresentationOpen;
@@ -70,8 +70,26 @@ namespace PowerPad
 				}
 
 				// Wait for the user to close by typing "quit<Enter>"
-				while (Console.ReadLine() != "quit")
-				{ }
+				var quitting = false;
+				while (!quitting)
+				{
+					var cmd = Console.ReadLine();
+
+					switch (cmd)
+					{
+						case "quit":
+							quitting = true;
+							continue;
+
+						case "cache":
+							cacheSlides();
+							break;
+
+						default:
+							writeWarning("Unknown command: " + cmd);
+							break;
+					}
+				}
 			}
 		}
 
@@ -115,24 +133,48 @@ namespace PowerPad
 				return;
 			}
 
-			writeLine("Beginning slide show");
+			writeSuccess("Beginning slide show");
 
-			// Start the timer
+			// Start the timer & store presentation references
 			ActiveSlideShow = win;
+			ActiveSlideShowCache = new Cache(computeHashForPresentation(win.Presentation));
 			watch.Reset();
 			watch.Start();
-			
-			// Save all slides as JPGs
-			cacheSlides(win.Presentation);
+
+			// Report whether slideshow cache is already primed
+			if (ActiveSlideShowCache.AreAllSlidesCached(ActiveSlideShow.Presentation.Slides.Count))
+				writeSuccess("All slides cached, ready to go!");
+			else
+				writeWarning("Presentation needs to be cached!");
 		}
 
-		static void cacheSlides(Presentation preso)
+		static string computeHashForPresentation(Presentation preso)
 		{
+			var presoFile = new FileInfo(Path.Combine(preso.Path, preso.Name));
+			var sha1 = SHA1.Create();
+			var presoHashBytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(presoFile.FullName + presoFile.LastWriteTimeUtc));
+			
+			return BitConverter.ToString(presoHashBytes).Replace("-", "");
+		}
+
+		static void cacheSlides()
+		{
+			if (ActiveSlideShow == null || ActiveSlideShow.Presentation == null)
+			{
+				writeWarning("Can't cache slides as there is no active slideshow");
+				return;
+			}
+
 			writeLine("Caching slides...");
 			writeLine("0%");
 
+			// Calculate hash to store cache, based on the presentation and it's last modification time
+			var preso = ActiveSlideShow.Presentation; 
+			var presoHash = computeHashForPresentation(preso);
+			var cache = ActiveSlideShowCache = new Cache(presoHash);
+
 			// Create cache directory
-			Cache.EnsureDirectoryExists();
+			cache.EnsureDirectoryExists();
 
 			// Loop slides, cache & report progress
 			int totalSlides = preso.Slides.Count;
@@ -144,20 +186,17 @@ namespace PowerPad
 				// If the user closes the slide show while we're caching, abort
 				if (ActiveSlideShow == null)
 				{
-					writeLine("Aborting cache since slide show has ended");
+					writeWarning("Aborting cache since slide show has ended");
 					return;
 				}
 				
-				// Export slide image if it hasn't already been cached
-				if (!Cache.ImageIsCached(i))
-					preso.Slides[i].Export(Cache.GetImagePath(i), "jpg");
+				// Cache image
+				if (!cache.ImageIsCached(i))
+					preso.Slides[i].Export(cache.GetImagePath(i), "jpg");
 
-				// Export slide notes if they haven't already been cached
-				if (!Cache.NotesAreCached(i))
+				// Cache notes
+				if (!cache.NoteIsCached(i))
 				{
-					string notes = "";
-
-					// We can only export notes if slide has a notes page
 					if (slide.HasNotesPage == MsoTriState.msoTrue)
 					{
 						// Attempt to find the shape for the slide notes frmae
@@ -169,10 +208,8 @@ namespace PowerPad
 
 						// If found, export the note contents
 						if (notesShape != null)
-							notes = notesShape.TextFrame.TextRange.Text;
+							cache.SetNotes(i, notesShape.TextFrame.TextRange.Text);
 					}
-
-					Cache.SetNotes(i, notes);
 				}
 
 				// Report progress
@@ -183,6 +220,8 @@ namespace PowerPad
 					previousProgress = percentage;
 				}
 			}
+
+			writeLine("Done!");
 		}
 
 		/// <summary>
@@ -198,12 +237,16 @@ namespace PowerPad
 			Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + ":\t" + msg);
 		}
 
-		/// <summary>
-		/// Writes a formatted warning message to the console
-		/// </summary>
 		static void writeWarning(object msg)
 		{
 			Console.ForegroundColor = ConsoleColor.Yellow;
+			writeLine(msg);
+			Console.ResetColor();
+		}
+
+		static void writeSuccess(object msg)
+		{
+			Console.ForegroundColor = ConsoleColor.Green;
 			writeLine(msg);
 			Console.ResetColor();
 		}

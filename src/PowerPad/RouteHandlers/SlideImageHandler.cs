@@ -8,6 +8,8 @@ namespace PowerPad.RouteHandlers
 	{
 		public void HandleRequest(HttpListenerContext context, StreamWriter sw)
 		{
+			var cache = Program.ActiveSlideShowCache;
+
 			// Validate parameters
 			if (context.Request.QueryString["Number"] == null)
 			{
@@ -28,14 +30,14 @@ namespace PowerPad.RouteHandlers
 			}
 
 			// Ensure slide image exists in cache
-			if (!Cache.ImageIsCached(slideNumber))
+			if (!cache.ImageIsCached(slideNumber))
 			{
 				new ErrorHandler(404, "Slide does not exist").HandleRequest(context, sw);
 				return;
 			}
 			
 			// Serve slide image to user
-			var handler = new StaticFileHandler(Cache.GetImagePath(slideNumber));
+			var handler = new StaticFileHandler(cache.GetImagePath(slideNumber));
 			handler.HandleRequest(context, sw);
 		}
 	}

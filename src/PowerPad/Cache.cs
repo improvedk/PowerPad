@@ -1,50 +1,64 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace PowerPad
 {
-	internal static class Cache
+	internal class Cache
 	{
-		private static Dictionary<int, string> notes = new Dictionary<int, string>();
+		private readonly string cacheDirectory;
 
-		internal static void Clear()
+		internal Cache(string hash)
 		{
-			if (Directory.Exists(Settings.CacheDirectory))
-				Directory.Delete(Settings.CacheDirectory, true);
+			cacheDirectory = Path.Combine(Settings.CacheDirectory, hash);
 		}
 
-		internal static void EnsureDirectoryExists()
+		internal void EnsureDirectoryExists()
 		{
-			Directory.CreateDirectory(Settings.CacheDirectory);
+			Directory.CreateDirectory(cacheDirectory);
 		}
 
-		internal static bool ImageIsCached(int slideNumber)
+		internal bool ImageIsCached(int slideNumber)
 		{
 			return File.Exists(GetImagePath(slideNumber));
 		}
 
-		internal static string GetImagePath(int slideNumber)
+		internal string GetImagePath(int slideNumber)
 		{
-			return Path.Combine(Settings.CacheDirectory, slideNumber + ".jpg");
+			return Path.Combine(cacheDirectory, slideNumber + ".jpg");
 		}
 
-		internal static bool NotesAreCached(int slideNumber)
+		internal bool NoteIsCached(int slideNumber)
 		{
-			return notes.ContainsKey(slideNumber);
+			return File.Exists(GetNote(slideNumber));
 		}
 
-		internal static string GetNotes(int slideNumber)
+		internal string GetNote(int slideNumber)
 		{
-			if (!NotesAreCached(slideNumber))
-				return null;
+			string path = GetNotePath(slideNumber);
 
-			return notes[slideNumber];
+			if (File.Exists(path))
+				return File.ReadAllText(path);
+
+			return null;
 		}
 
-		internal static void SetNotes(int slideNumber, string noteValue)
+		internal string GetNotePath(int slideNumber)
 		{
-			notes[slideNumber] = noteValue.Replace("\r", Environment.NewLine);
+			return Path.Combine(cacheDirectory, slideNumber + ".txt");
+		}
+
+		internal void SetNotes(int slideNumber, string noteValue)
+		{
+			File.WriteAllText(GetNotePath(slideNumber), noteValue.Replace("\r", Environment.NewLine));
+		}
+
+		internal bool AreAllSlidesCached(int slideCount)
+		{
+			if (!Directory.Exists(cacheDirectory))
+				return false;
+
+			return Directory.GetFiles(cacheDirectory).Count(x => Path.GetExtension(x) == ".jpg") == slideCount;
 		}
 	}
 }
