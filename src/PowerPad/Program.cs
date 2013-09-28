@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.Office.Core;
+﻿using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 using System;
 using System.Diagnostics;
@@ -7,12 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
 {
 	class Program
 	{
+		private const int maxConsolePresentationNameLength = 40;
+
 		private static readonly Application ppt = new Application();
 		private static readonly Stopwatch watch = new Stopwatch();
 		
@@ -51,7 +53,7 @@ namespace PowerPad
 					else
 					{
 						foreach (Presentation preso in ppt.Presentations)
-							writeLine("\t" + preso.Name + " (" + preso.Slides.Count + " slides)");
+							writeLine("\t" + formatPresentationNameForConsole(preso.Name) + " (" + preso.Slides.Count + " slides)");
 					}
 
 					// Do we need to connect to a running slide show?
@@ -92,6 +94,14 @@ namespace PowerPad
 					}
 				}
 			}
+		}
+
+		static string formatPresentationNameForConsole(string name)
+		{
+			if (name.Length > maxConsolePresentationNameLength)
+				return name.Substring(0, maxConsolePresentationNameLength) + "...";
+
+			return name;
 		}
 
 		/// <summary>
@@ -230,7 +240,7 @@ namespace PowerPad
 		/// </summary>
 		static void ppt_PresentationOpen(Presentation pres)
 		{
-			writeLine("Presentation opened: " + pres.Name + " (" + pres.Slides.Count + " slides)");
+			writeLine("Presentation opened: " + formatPresentationNameForConsole(pres.Name) + " (" + pres.Slides.Count + " slides)");
 		}
 
 		static void writeLine(object msg)
