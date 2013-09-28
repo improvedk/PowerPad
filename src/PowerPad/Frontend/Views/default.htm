@@ -219,7 +219,11 @@
 
 				// Update notes
 				var rawNote = data.currentSlideNotes;
-				$('#notes').html(markdown.toHTML(rawNote));
+				if (rawNote != null) {
+					$('#notes').html(markdown.toHTML(rawNote));
+					$('#notes').show();
+				} else
+					$('#notes').hide();
 			}
 
 			// Always store last data retrieved from server
