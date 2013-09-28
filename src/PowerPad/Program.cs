@@ -222,7 +222,7 @@ namespace PowerPad
 				}
 			}
 
-			writeLine("Done!");
+			writeSuccess("Done!");
 		}
 
 		/// <summary>
