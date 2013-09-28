@@ -22,6 +22,8 @@ namespace PowerPad
 
 		static void Main()
 		{
+			Console.Title = "PowerPad";
+
 			// Add global exception handler to log all exceptions
 			AppDomain.CurrentDomain.UnhandledException += handleUnhandledException;
 
