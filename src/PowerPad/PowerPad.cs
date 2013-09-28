@@ -10,7 +10,7 @@ using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
 {
-	class Program
+	class PowerPad
 	{
 		private const int maxConsolePresentationNameLength = 40;
 

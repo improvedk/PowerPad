@@ -12,7 +12,7 @@ namespace PowerPad.RouteHandlers
 			context.Response.ContentType = "application/json";
 
 			// If there's no active slide show, we can't return any data
-			if (Program.ActiveSlideShow == null)
+			if (PowerPad.ActiveSlideShow == null)
 			{
 				new ErrorHandler(404, "No active slide show").HandleRequest(context, writer);
 				return;
@@ -22,14 +22,14 @@ namespace PowerPad.RouteHandlers
 			try
 			{
 				// Return current slide show state
-				var preso = Program.ActiveSlideShow.Presentation;
-				var currentSlideNumber = Program.ActiveSlideShow.View.CurrentShowPosition;
+				var preso = PowerPad.ActiveSlideShow.Presentation;
+				var currentSlideNumber = PowerPad.ActiveSlideShow.View.CurrentShowPosition;
 
 				// Return state to client
 				var state = new {
 					numberOfSlides = preso.Slides.Count,
 					currentSlideNumber,
-					currentSlideNotes = Program.ActiveSlideShowCache.GetNote(currentSlideNumber)
+					currentSlideNotes = PowerPad.ActiveSlideShowCache.GetNote(currentSlideNumber)
 				};
 
 				var serializer = new JavaScriptSerializer();

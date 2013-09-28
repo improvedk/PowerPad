@@ -60,7 +60,7 @@
     <Compile Include="Cache.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="PadServer.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="PowerPad.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteHandlers\SlideShowDataHandler.cs" />
     <Compile Include="RouteHandlers\StaticFileHandler.cs" />

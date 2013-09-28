@@ -8,7 +8,7 @@ namespace PowerPad.RouteHandlers
 	{
 		public void HandleRequest(HttpListenerContext context, StreamWriter sw)
 		{
-			var cache = Program.ActiveSlideShowCache;
+			var cache = PowerPad.ActiveSlideShowCache;
 
 			// Validate parameters
 			if (context.Request.QueryString["Number"] == null)
