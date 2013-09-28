@@ -39,7 +39,7 @@ namespace PowerPad
 			}
 		}
 
-		internal void Start()
+		internal bool Start()
 		{
 			if (listenerThread != null)
 				throw new InvalidOperationException("Can't start already started PadServer");
@@ -54,7 +54,19 @@ namespace PowerPad
 			listenerThread = new Thread(listenForRequests);
 			listenerThread.Start();
 
-			listener.Start();
+			try
+			{
+				listener.Start();
+			}
+			catch (HttpListenerException)
+			{
+				Log.Warning("Couldn't listen on port " + portNumber + " as it's already in use!");
+				Log.Warning("Please fix and restart PowerPad.");
+				
+				return false;
+			}
+
+			return true;
 		}
 
 		private void setupErrorHandlers()
@@ -127,9 +139,12 @@ namespace PowerPad
 
 		internal void Stop()
 		{
-			// First stop the listener, then abort the request handler thread
-			listener.Stop();
-			listenerThread.Abort();
+			// Stop listening / hanadling requets
+			if (listener.IsListening)
+			{
+				listener.Stop();
+				listenerThread.Abort();
+			}
 		}
 
 		public void Dispose()

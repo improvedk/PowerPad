@@ -28,52 +28,53 @@ namespace PowerPad
 			// Start server
 			using (var server = new PadServer(Settings.PortNumber))
 			{
-				server.Start();
-
-				// Report which addresses server is listening on
-				Log.Success("Server now listening on:");
-				foreach (var addr in server.ListeningAddresses)
-					Log.Success("\t" + addr);
-
 				printHelp();
-			
-				// Wire up PowerPoint events
-				ppt.PresentationOpen += ppt_PresentationOpen;
-				ppt.SlideShowBegin += ppt_SlideShowBegin;
-				ppt.SlideShowEnd += ppt_SlideShowEnd;
-				ppt.SlideShowNextSlide += ppt_SlideShowNextSlide;
 
-				// Either hook into running instance or start a new instance of PowerPoint up
-				if (ppt.Visible == MsoTriState.msoTrue)
+				if (server.Start())
 				{
-					Log.Line("Connected to running PowerPoint instance");
+					// Report which addresses server is listening on
+					Log.Success("Server now listening on:");
+					foreach (var addr in server.ListeningAddresses)
+						Log.Success("\t" + addr);
 
-					// If there are any opened presentations, notify the user
-					if (ppt.Presentations.Count == 0)
-						Log.Line("\tNo open presentations");
+					// Wire up PowerPoint events
+					ppt.PresentationOpen += ppt_PresentationOpen;
+					ppt.SlideShowBegin += ppt_SlideShowBegin;
+					ppt.SlideShowEnd += ppt_SlideShowEnd;
+					ppt.SlideShowNextSlide += ppt_SlideShowNextSlide;
+
+					// Either hook into running instance or start a new instance of PowerPoint up
+					if (ppt.Visible == MsoTriState.msoTrue)
+					{
+						Log.Line("Connected to running PowerPoint instance");
+
+						// If there are any opened presentations, notify the user
+						if (ppt.Presentations.Count == 0)
+							Log.Line("\tNo open presentations");
+						else
+						{
+							foreach (Presentation preso in ppt.Presentations)
+								Log.Line("\t" + formatPresentationNameForConsole(preso));
+						}
+
+						// Do we need to connect to a running slide show?
+						if (ppt.SlideShowWindows.Count > 0)
+						{
+							ppt_SlideShowBegin(ppt.SlideShowWindows[1]);
+
+							// Has slide show been closed while we were starting it up?
+							if (ActiveSlideShow != null)
+								ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
+						}
+					}
 					else
 					{
-						foreach (Presentation preso in ppt.Presentations)
-							Log.Line("\t" + formatPresentationNameForConsole(preso));
-					}
-
-					// Do we need to connect to a running slide show?
-					if (ppt.SlideShowWindows.Count > 0)
-					{
-						ppt_SlideShowBegin(ppt.SlideShowWindows[1]);
-
-						// Has slide show been closed while we were starting it up?
-						if (ActiveSlideShow != null)
-							ppt_SlideShowNextSlide(ppt.SlideShowWindows[1]);
+						Log.Line("Starting up new PowerPoint instance");
+						ppt.Activate();
 					}
 				}
-				else
-				{
-					Log.Line("Starting up new PowerPoint instance");
-					ppt.Activate();
-				}
 
-				// Wait for the user to close by typing "quit<Enter>"
+				// Wait for user command
 				var quitting = false;
 				while (!quitting)
 				{
