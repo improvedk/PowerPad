@@ -256,6 +256,13 @@ namespace PowerPad
 		{
 			Log.Line("Presentation opened");
 			Log.Line("\t" + formatPresentationNameForConsole(pres));
+			
+			// Report whether slideshow cache is already primed
+			var cache = new Cache(computeHashForPresentation(pres));
+			if (cache.AreAllSlidesCached(pres.Slides.Count))
+				Log.Success("\tAll slides cached, ready to go!");
+			else
+				Log.Warning("\tPresentation needs to be cached!");
 		}
 	}
 }
