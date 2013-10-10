@@ -255,14 +255,13 @@ namespace PowerPad
 		static void ppt_PresentationOpen(Presentation pres)
 		{
 			Log.Line("Presentation opened");
-			Log.Line("\t" + formatPresentationNameForConsole(pres));
 			
-			// Report whether slideshow cache is already primed
+			// Format presentation name depending on if it needs to be cached or not
 			var cache = new Cache(computeHashForPresentation(pres));
 			if (cache.AreAllSlidesCached(pres.Slides.Count))
-				Log.Success("\tAll slides cached, ready to go!");
+				Log.Success("\t" + formatPresentationNameForConsole(pres));
 			else
-				Log.Warning("\tPresentation needs to be cached!");
+				Log.Warning("\t" + formatPresentationNameForConsole(pres));
 		}
 	}
 }
