@@ -3,10 +3,6 @@ using Microsoft.Office.Interop.PowerPoint;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 
 namespace PowerPad
 {
@@ -88,10 +84,6 @@ namespace PowerPad
 							quitting = true;
 							continue;
 
-						case "cache":
-							cacheSlides();
-							break;
-
 						default:
 							Log.Warning("Unknown command: " + cmd);
 							break;
@@ -103,7 +95,6 @@ namespace PowerPad
 		static void printHelp()
 		{
 			Log.Line("Available commands:");
-			Log.Line("\tcache -- Caches the currently active slideshow");
 			Log.Line("\tquit -- Ends the PowerPad process");
 		}
 
@@ -162,91 +153,9 @@ namespace PowerPad
 
 			// Start the timer & store presentation references
 			ActiveSlideShow = win;
-			ActiveSlideShowCache = new Cache(computeHashForPresentation(win.Presentation));
+			ActiveSlideShowCache = new Cache(win.Presentation);
 			watch.Reset();
 			watch.Start();
-
-			// Report whether slideshow cache is already primed
-			if (ActiveSlideShowCache.AreAllSlidesCached(ActiveSlideShow.Presentation.Slides.Count))
-				Log.Success("\tAll slides cached, ready to go!");
-			else
-				Log.Warning("\tPresentation needs to be cached!");
-		}
-
-		static string computeHashForPresentation(Presentation preso)
-		{
-			var presoFile = new FileInfo(Path.Combine(preso.Path, preso.Name));
-			var sha1 = SHA1.Create();
-			var presoHashBytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(presoFile.FullName + presoFile.LastWriteTimeUtc));
-			
-			return BitConverter.ToString(presoHashBytes).Replace("-", "");
-		}
-
-		static void cacheSlides()
-		{
-			if (ActiveSlideShow == null || ActiveSlideShow.Presentation == null)
-			{
-				Log.Warning("Can't cache slides as there is no active slideshow");
-				return;
-			}
-
-			Log.Line("Caching slides...");
-			Log.Line("\t0%");
-
-			// Calculate hash to store cache, based on the presentation and it's last modification time
-			var preso = ActiveSlideShow.Presentation; 
-			var presoHash = computeHashForPresentation(preso);
-			var cache = ActiveSlideShowCache = new Cache(presoHash);
-
-			// Create cache directory
-			cache.EnsureDirectoryExists();
-
-			// Loop slides, cache & report progress
-			int totalSlides = preso.Slides.Count;
-			int previousProgress = 0;
-			for (int i = 1; i <= totalSlides; i++)
-			{
-				Slide slide = preso.Slides[i];
-				
-				// If the user closes the slide show while we're caching, abort
-				if (ActiveSlideShow == null)
-				{
-					Log.Warning("\tAborting cache since slide show has ended");
-					return;
-				}
-				
-				// Cache image
-				if (!cache.ImageIsCached(i))
-					preso.Slides[i].Export(cache.GetImagePath(i), "jpg");
-
-				// Cache notes
-				if (!cache.NoteIsCached(i))
-				{
-					if (slide.HasNotesPage == MsoTriState.msoTrue)
-					{
-						// Attempt to find the shape for the slide notes frmae
-						var notesShape = slide.NotesPage.Shapes.Cast<Shape>()
-						                      .Where(s => s.Name == "Notes Placeholder 2")
-						                      .Where(s => s.HasTextFrame == MsoTriState.msoTrue)
-						                      .Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
-						                      .SingleOrDefault();
-
-						// If found, export the note contents
-						if (notesShape != null)
-							cache.SetNotes(i, notesShape.TextFrame.TextRange.Text);
-					}
-				}
-
-				// Report progress
-				int percentage = (int)Math.Round((double)i / totalSlides * 100, 0);
-				if (percentage - previousProgress > 10 || percentage == 100)
-				{
-					Log.Line("\t" + percentage + "%");
-					previousProgress = percentage;
-				}
-			}
-
-			Log.Success("\tDone!");
 		}
 
 		/// <summary>
@@ -255,13 +164,7 @@ namespace PowerPad
 		static void ppt_PresentationOpen(Presentation pres)
 		{
 			Log.Line("Presentation opened");
-			
-			// Format presentation name depending on if it needs to be cached or not
-			var cache = new Cache(computeHashForPresentation(pres));
-			if (cache.AreAllSlidesCached(pres.Slides.Count))
 				Log.Success("\t" + formatPresentationNameForConsole(pres));
-			else
-				Log.Warning("\t" + formatPresentationNameForConsole(pres));
 		}
 	}
 }

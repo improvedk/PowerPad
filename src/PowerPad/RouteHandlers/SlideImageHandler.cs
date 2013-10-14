@@ -30,7 +30,7 @@ namespace PowerPad.RouteHandlers
 			}
 
 			// Ensure slide image exists in cache
-			if (!cache.ImageIsCached(slideNumber))
+			if (!cache.SlideIsCached(slideNumber))
 			{
 				new ErrorHandler(404, "Slide does not exist").HandleRequest(context, sw);
 				return;
