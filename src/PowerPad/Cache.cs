@@ -75,15 +75,17 @@ namespace PowerPad
 					{
 						// Attempt to find the shape for the slide notes frame
 						var notesShape = preso.Slides[i].NotesPage.Shapes.Cast<Shape>()
-											  .Where(s => s.Name == "Notes Placeholder 2")
-											  .Where(s => s.HasTextFrame == MsoTriState.msoTrue)
-											  .Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
-											  .SingleOrDefault();
+														.Where(s => s.Name == "Notes Placeholder 2")
+														.Where(s => s.HasTextFrame == MsoTriState.msoTrue)
+														.Where(s => s.TextFrame.HasText == MsoTriState.msoTrue)
+														.SingleOrDefault();
 
 						// If found, export the note contents
 						if (notesShape != null)
 							SetNotes(i, notesShape.TextFrame.TextRange.Text);
 					}
+					else
+						SetNotes(i, null);
 
 					// Add cached slide to manifest
 					if (manifest.ContainsKey(i))
@@ -175,7 +177,15 @@ namespace PowerPad
 
 		internal void SetNotes(int slideNumber, string noteValue)
 		{
-			File.WriteAllText(GetNotePath(slideNumber), noteValue.Replace("\r", Environment.NewLine));
+			string notePath = GetNotePath(slideNumber);
+
+			if (noteValue == null)
+			{
+				if (File.Exists(notePath))
+					File.Delete(notePath);
+			}
+			else
+				File.WriteAllText(notePath, noteValue.Replace("\r", Environment.NewLine));
 		}
 
 		internal bool AreAllSlidesCached(int slideCount)

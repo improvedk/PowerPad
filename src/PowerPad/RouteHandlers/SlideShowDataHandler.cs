@@ -12,7 +12,7 @@ namespace PowerPad.RouteHandlers
 			context.Response.ContentType = "application/json";
 
 			// If there's no active slide show, we can't return any data
-			if (PowerPad.ActiveSlideShow == null)
+			if (PowerPad.ActiveSlideShow == null || PowerPad.ActiveSlideShowCache == null)
 			{
 				new ErrorHandler(404, "No active slide show").HandleRequest(context, writer);
 				return;
