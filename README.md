@@ -75,6 +75,9 @@ PowerPad does not support the native rich text formatting that PowerPoint stores
 ### Why perform caching up front and not on-demand?
 Making Powerpoint render a slide locks up Powerpoint for just a short moment. Unfortunately this is enough to cause some problems with clickers and changing slides using the keyboard. As such, aggressively caching seems to be the only stable method.
 
+### Can I modify the PowerPad interface?
+You sure can - just edit the static files in the Frontend directory. If you make any general fixes or additions, please consider submitting them back to the project.
+
 Requirements
 ------------
 * Powerpoint 2013
