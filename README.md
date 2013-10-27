@@ -2,6 +2,8 @@ PowerPad
 ========
 PowerPad is a simple and easy way to replicate the functionality of Powerpoints presenters view, though on your tablet or phone.
 
+To download, check out the [Releases page](https://github.com/improvedk/PowerPad/releases/). No install is necessary, simply unpack and run.
+
 Features
 --------
 * Supports Powerpoint 2013.
