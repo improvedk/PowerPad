@@ -9,6 +9,9 @@ Features
 * Supports Powerpoint 2013.
 * Interface is available through any device with a browser - including iPads, iPhones as well as Android & Windows tablets & Phones.
 * Automatically caches slides & detects changes when presentation starts.
+* Handles flaky connections.
+* Progress bar that shows presentation progress based on user defined start & end times.
+* Progress bar that shows overall slide progress, contrasted with presentation time progress.
 
 PowerPad Interface
 ------------------
