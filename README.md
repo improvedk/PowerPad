@@ -1,5 +1,7 @@
 PowerPad
 ========
+PowerPad helps you keep to your schedule while presenting by displaying your presentation progress, notes and preview of the next slide.
+
 PowerPad is a simple and easy way to replicate the functionality of Powerpoints presenters view, though on your tablet or phone.
 
 To download, check out the [Releases page](https://github.com/improvedk/PowerPad/releases/). No install is necessary, simply unpack and run.
