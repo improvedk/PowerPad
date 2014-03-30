@@ -1,4 +1,5 @@
-﻿using Microsoft.Office.Core;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Office.Core;
 using Microsoft.Office.Interop.PowerPoint;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,16 @@ namespace PowerPad
 			cacheSlides();
 		}
 
+		private string sanitizeNotes(string notes)
+		{
+			if (notes == null)
+				return notes;
+
+			notes = Regex.Replace(notes, "\x0B", Environment.NewLine);
+
+			return notes;
+		}
+
 		private void cacheSlides()
 		{
 			Log.Line("\tCaching slides...");
@@ -82,7 +93,7 @@ namespace PowerPad
 
 						// If found, export the note contents
 						if (notesShape != null)
-							SetNotes(i, notesShape.TextFrame.TextRange.Text);
+							SetNotes(i, sanitizeNotes(notesShape.TextFrame.TextRange.Text));
 					}
 					else
 						SetNotes(i, null);
